@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isImg } from 'src/Utility'
+  import { isImg } from '../Utility'
   import DiHtml5 from 'svelte-icons/di/DiHtml5.svelte'
   import FaFile from 'svelte-icons/fa/FaFile.svelte'
   import FaFileAudio from 'svelte-icons/fa/FaFileAudio.svelte'
@@ -12,7 +12,7 @@
   import FaFileVideo from 'svelte-icons/fa/FaFileVideo.svelte'
   import FaFileWord from 'svelte-icons/fa/FaFileWord.svelte'
   import FaStickyNote from 'svelte-icons/fa/FaStickyNote.svelte'
-  import { ICON } from 'src/Constants'
+  import { ICON } from '../Constants'
 
   export let path: string
 </script>

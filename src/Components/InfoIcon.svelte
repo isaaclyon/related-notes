@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { SubtypeInfo } from 'src/Interfaces'
+  import type { SubtypeInfo } from '../Interfaces'
   import FaRegQuestionCircle from 'svelte-icons/fa/FaRegQuestionCircle.svelte'
 
   export let currSubtypeInfo: SubtypeInfo

@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { App } from 'obsidian'
   import { hoverPreview, isInVault, isLinked } from 'obsidian-community-lib'
-  import type AnalysisView from 'src/AnalysisView'
-  import { ANALYSIS_TYPES, ICON, LINKED, NOT_LINKED } from 'src/Constants'
-  import type { GraphAnalysisSettings, Subtype } from 'src/Interfaces'
-  import type GraphAnalysisPlugin from 'src/main'
+  import type AnalysisView from '../AnalysisView'
+  import { ANALYSIS_TYPES, ICON, LINKED, NOT_LINKED } from '../Constants'
+  import type { GraphAnalysisSettings, Subtype } from '../Interfaces'
+  import type GraphAnalysisPlugin from '../main'
   import {
     classExt,
     dropPath,
@@ -13,7 +13,7 @@
     openMenu,
     openOrSwitch,
     presentPath,
-  } from 'src/Utility'
+  } from '../Utility'
   import { onMount } from 'svelte'
   import FaLink from 'svelte-icons/fa/FaLink.svelte'
   import InfiniteScroll from 'svelte-infinite-scroll'

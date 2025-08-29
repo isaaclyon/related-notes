@@ -1,7 +1,7 @@
 import { App, Notice, PluginSettingTab, Setting } from 'obsidian'
-import { ANALYSIS_TYPES } from 'src/Constants'
-import type { Subtype } from 'src/Interfaces'
-import type GraphAnalysisPlugin from 'src/main'
+import { ANALYSIS_TYPES } from './Constants'
+import type { Subtype } from './Interfaces'
+import type GraphAnalysisPlugin from './main'
 import Checkboxes from './Components/Checkboxes.svelte'
 
 export class SampleSettingTab extends PluginSettingTab {
