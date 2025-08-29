@@ -14,16 +14,16 @@ import {
   isLinked,
   ResolvedLinks,
 } from 'obsidian-community-lib'
-import type AnalysisView from 'src/AnalysisView'
-import { DECIMALS, IMG_EXTENSIONS, LINKED, NOT_LINKED } from 'src/Constants'
+import type AnalysisView from './AnalysisView'
+import { DECIMALS, IMG_EXTENSIONS, LINKED, NOT_LINKED } from './Constants'
 import type {
   ComponentResults,
   GraphAnalysisSettings, LineSentences,
   ResultMap,
   Subtype,
-} from 'src/Interfaces'
-import type GraphAnalysisPlugin from 'src/main'
-import { CoCitation } from 'src/Interfaces'
+} from './Interfaces'
+import type GraphAnalysisPlugin from './main'
+import { CoCitation } from './Interfaces'
 
 export const sum = (arr: number[]) => {
   if (arr.length === 0) {

@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { App, TFile } from 'obsidian'
-  import type AnalysisView from 'src/AnalysisView'
-  import type { SubtypeInfo } from 'src/Interfaces'
-  import type GraphAnalysisPlugin from 'src/main'
+  import type AnalysisView from '../AnalysisView'
+  import type { SubtypeInfo } from '../Interfaces'
+  import type GraphAnalysisPlugin from '../main'
   import FaCreativeCommonsZero from 'svelte-icons/fa/FaCreativeCommonsZero.svelte'
   import FaFire from 'svelte-icons/fa/FaFire.svelte'
   import FaRegSnowflake from 'svelte-icons/fa/FaRegSnowflake.svelte'

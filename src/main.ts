@@ -1,15 +1,15 @@
 import { addIcon, Notice, Plugin, WorkspaceLeaf } from 'obsidian'
 import { openView, wait } from 'obsidian-community-lib'
-import AnalysisView from 'src/AnalysisView'
+import AnalysisView from './AnalysisView'
 import {
   ANALYSIS_TYPES,
   DEFAULT_SETTINGS,
   iconSVG,
   VIEW_TYPE_GRAPH_ANALYSIS,
-} from 'src/Constants'
-import type { GraphAnalysisSettings } from 'src/Interfaces'
-import MyGraph from 'src/MyGraph'
-import { SampleSettingTab } from 'src/Settings'
+} from './Constants'
+import type { GraphAnalysisSettings } from './Interfaces'
+import MyGraph from './MyGraph'
+import { SampleSettingTab } from './Settings'
 import { debug } from './Utility'
 
 export default class GraphAnalysisPlugin extends Plugin {

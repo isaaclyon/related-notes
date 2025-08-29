@@ -1,4 +1,4 @@
-import type { GraphAnalysisSettings, SubtypeInfo } from 'src/Interfaces'
+import type { GraphAnalysisSettings, SubtypeInfo } from './Interfaces'
 
 export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
   noInfinity: true,

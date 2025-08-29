@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type AnalysisView from 'src/AnalysisView'
-  import { ANALYSIS_TYPES, ICON } from 'src/Constants'
-  import type { Subtype } from 'src/Interfaces'
+  import type AnalysisView from '../AnalysisView'
+  import { ANALYSIS_TYPES, ICON } from '../Constants'
+  import type { Subtype } from '../Interfaces'
   import FaGlobeAfrica from 'svelte-icons/fa/FaGlobeAfrica.svelte'
   import IoIosChatbubbles from 'svelte-icons/io/IoIosChatbubbles.svelte'
 

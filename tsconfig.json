@@ -1,23 +1,27 @@
 {
-  "extends": "@tsconfig/svelte/tsconfig.json",
-
   "compilerOptions": {
     "baseUrl": ".",
-    // "inlineSourceMap": true,
-    "inlineSources": true,
+    "sourceMap": true,
     "module": "ESNext",
-    "target": "es6",
+    "target": "ES2020",
     "allowJs": true,
     "checkJs": false,
+    "strict": true,
     "noImplicitAny": true,
     "moduleResolution": "node",
     "importHelpers": true,
-    "lib": ["dom", "es5", "scripthost", "es2019"],
-    "types": ["node", "svelte"],
+    "lib": ["dom", "ES2020", "scripthost"],
+    "types": ["node", "svelte", "vite/client"],
     "paths": {
       "src": ["src/*"]
-    }
+    },
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "verbatimModuleSyntax": false,
+    "resolveJsonModule": true,
+    "isolatedModules": true
   },
-  "include": ["src/**/*", "src/*", "**/*.ts"],
-  "exclude": ["node_modules/*"]
+  "include": ["src/**/*", "src/*", "**/*.ts", "vite.config.ts"],
+  "exclude": ["node_modules/*", "dist/*"]
 }

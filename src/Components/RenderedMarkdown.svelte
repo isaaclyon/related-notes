@@ -5,7 +5,7 @@
   export let sourcePath: string
   export let app: App
   export let line: number
-  import { jumpToSelection, openOrSwitch } from 'src/Utility'
+  import { jumpToSelection, openOrSwitch } from '../Utility'
 
   let renderedSentence = sentence[0] + '==' + sentence[1] + '==' + sentence[2]
   if (sentence.length === 5) {

@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { App } from 'obsidian'
   import Louvain from './Louvain.svelte'
-  import type AnalysisView from 'src/AnalysisView'
-  import type { GraphAnalysisSettings, Subtype } from 'src/Interfaces'
-  import type GraphAnalysisPlugin from 'src/main'
+  import type AnalysisView from '../AnalysisView'
+  import type { GraphAnalysisSettings, Subtype } from '../Interfaces'
+  import type GraphAnalysisPlugin from '../main'
   import CoCitations from './CoCitations.svelte'
   import LabelPropagation from './LabelPropagation.svelte'
   import ScrollSelector from './ScrollSelector.svelte'

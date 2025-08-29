@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { App } from 'obsidian'
-  import type AnalysisView from 'src/AnalysisView'
+  import type AnalysisView from '../AnalysisView'
   import {
     ANALYSIS_TYPES,
     ICON,
@@ -8,15 +8,15 @@
     MEASURE,
     NODE,
     NOT_LINKED,
-  } from 'src/Constants'
+  } from '../Constants'
   import type {
     CoCitation,
     CoCitationMap,
     CoCitationRes,
     GraphAnalysisSettings,
     Subtype,
-  } from 'src/Interfaces'
-  import type GraphAnalysisPlugin from 'src/main'
+  } from '../Interfaces'
+  import type GraphAnalysisPlugin from '../main'
   import {
     classExt,
     debug,
@@ -30,7 +30,7 @@
     openOrSwitch,
     presentPath,
     roundNumber,
-  } from 'src/Utility'
+  } from '../Utility'
   import { onMount } from 'svelte'
   import FaLink from 'svelte-icons/fa/FaLink.svelte'
   import InfiniteScroll from 'svelte-infinite-scroll'
