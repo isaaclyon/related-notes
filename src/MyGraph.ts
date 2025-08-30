@@ -24,21 +24,22 @@ import type {
   Communities,
   GraphAnalysisSettings,
   HITSResult, LineSentences,
-  NLPPlugin,
   ResultMap,
   Subtype,
 } from './Interfaces'
 import { addPreCocitation, findSentence, getCounts, getMaxKey, roundNumber, sum } from './Utility'
-import * as similarity from 'wink-nlp/utilities/similarity'
+import { BM25Service, type ScoredResult } from './index/BM25Service'
 
 export default class MyGraph extends Graph {
   app: App
   settings: GraphAnalysisSettings
+  bm25Service: BM25Service
 
   constructor(app: App, settings: GraphAnalysisSettings) {
     super()
     this.app = app
     this.settings = settings
+    this.bm25Service = new BM25Service()
   }
 
   async initGraph(): Promise<MyGraph> {
@@ -47,6 +48,9 @@ export default class MyGraph extends Graph {
       this.settings
     const regex = new RegExp(exclusionRegex, 'i')
     let i = 0
+
+    // Clear existing BM25 index
+    this.bm25Service.clear()
 
     const includeTag = (tags: TagCache[] | undefined) =>
       exclusionTags.length === 0 ||
@@ -57,9 +61,13 @@ export default class MyGraph extends Graph {
     const includeExt = (node: string) =>
       allFileExtensions || node.endsWith('md')
 
+    // Index documents for BM25
+    const filesToIndex = new Set<string>()
+
     for (const source in resolvedLinks) {
       const tags = this.app.metadataCache.getCache(source)?.tags
       if (includeTag(tags) && includeRegex(source) && includeExt(source)) {
+        filesToIndex.add(source)
         if (!this.hasNode(source)) {
           this.addNode(source, { i })
           i++
@@ -68,12 +76,29 @@ export default class MyGraph extends Graph {
         for (const dest in resolvedLinks[source]) {
           const tags = this.app.metadataCache.getCache(dest)?.tags
           if (includeTag(tags) && includeRegex(dest) && includeExt(dest)) {
+            filesToIndex.add(dest)
             if (!this.hasNode(dest)) {
               this.addNode(dest, { i })
               i++
             }
             this.addEdge(source, dest, { resolved: true })
           }
+        }
+      }
+    }
+
+    // Index all files for text similarity
+    for (const filePath of filesToIndex) {
+      const file = this.app.vault.getAbstractFileByPath(filePath)
+      if (file && 'extension' in file && file.extension === 'md') {
+        try {
+          const content = await this.app.vault.cachedRead(file)
+          const cache = this.app.metadataCache.getCache(filePath)
+          const title = cache?.frontmatter?.title || file.basename
+          
+          this.bm25Service.indexDocument(filePath, title, content)
+        } catch (error) {
+          console.warn(`Failed to index file ${filePath}:`, error)
         }
       }
     }
@@ -584,25 +609,25 @@ export default class MyGraph extends Graph {
 
     BoW: async (a: string): Promise<ResultMap> => {
       const results: ResultMap = {}
-      const nlp = getNLPPlugin(this.app)
-      if (!nlp) return results
-
-      const { Docs } = nlp
-      const sourceBoW = nlp.getNoStopBoW(Docs[a])
-
-      this.forEachNode(async (to: string) => {
-        const targetDoc = Docs[to]
-        if (!targetDoc) {
-          results[to] = { measure: 0, extra: [] }
+      
+      // Use BM25 similarity instead of bag-of-words cosine similarity
+      const similarNotes = this.bm25Service.getSimilarNotes(a, 100)
+      
+      // Convert BM25 results to ResultMap format
+      for (const result of similarNotes) {
+        results[result.path] = {
+          measure: result.score,
+          extra: []
         }
-        const targetBoW = nlp.getNoStopBoW(Docs[to])
-
-        const measure = similarity.bow.cosine(sourceBoW, targetBoW)
-        results[to] = {
-          measure,
-          extra: [],
+      }
+      
+      // Add zero scores for nodes not returned by BM25
+      this.forEachNode((node: string) => {
+        if (!results[node]) {
+          results[node] = { measure: 0, extra: [] }
         }
       })
+      
       return results
     },
 
@@ -632,43 +657,37 @@ export default class MyGraph extends Graph {
 
     'Otsuka-Chiai': async (a: string): Promise<ResultMap> => {
       const results: ResultMap = {}
-      const nlp = getNLPPlugin(this.app)
-      if (!nlp) return results
-
-      const { Docs } = nlp
-      const sourceSet = nlp.getNoStopSet(Docs[a])
-
-      this.forEachNode(async (to: string) => {
-        const targetDoc = Docs[to]
-        if (!targetDoc) {
-          results[to] = { measure: 0, extra: [] }
+      
+      // Use BM25 similarity as fallback for Otsuka-Chiai
+      const similarNotes = this.bm25Service.getSimilarNotes(a, 100)
+      
+      // Convert BM25 results to ResultMap format
+      for (const result of similarNotes) {
+        results[result.path] = {
+          measure: result.score,
+          extra: []
         }
-        const targetSet = nlp.getNoStopSet(Docs[to])
-
-        const measure = similarity.set.oo(sourceSet, targetSet)
-        results[to] = {
-          measure,
-          extra: [],
+      }
+      
+      // Add zero scores for nodes not returned by BM25
+      this.forEachNode((node: string) => {
+        if (!results[node]) {
+          results[node] = { measure: 0, extra: [] }
         }
       })
+      
       return results
     },
 
     Sentiment: async (a: string): Promise<ResultMap> => {
       const results: ResultMap = {}
-      const nlp = getNLPPlugin(this.app)
-      if (!nlp) return results
-
-      const { Docs } = nlp
+      
+      // Sentiment analysis removed - returning empty results
+      // This was dependent on wink-nlp which has been removed
       this.forEachNode((node) => {
-        const doc = Docs[node]
-        if (!doc) {
-          results[node] = { measure: 0, extra: [] }
-          return
-        }
-        const measure = nlp.getAvgSentimentFromDoc(doc)
-        results[node] = { measure, extra: [] }
+        results[node] = { measure: 0, extra: [] }
       })
+      
       return results
     },
 
@@ -695,15 +714,3 @@ export default class MyGraph extends Graph {
   }
 }
 
-function getNLPPlugin(app: App): NLPPlugin | null {
-  const { nlp } = app.plugins.plugins
-  if (!nlp) {
-    new Notice(
-      'The NLP plugin must be installed & enabled to use the 💬 algorithms.'
-    )
-    return null
-  } else if (!nlp?.settings?.refreshDocsOnLoad) {
-    new Notice('In the NLP plugin, enable the setting "Refresh Docs on load".')
-    return null
-  } else return nlp
-}

@@ -1,5 +1,4 @@
 import type { TFile } from 'obsidian'
-import type { Bow, Document, WinkMethods } from 'wink-nlp'
 import { ReferenceCache } from 'obsidian'
 
 export interface ResolvedLinks {
@@ -104,19 +103,6 @@ export interface GraphAnalysisSettings {
   algsToShow: Subtype[]
 }
 
-export interface NLPPlugin {
-  Docs: { [path: string]: Document }
-  model: WinkMethods
-  getDocFromFile: (file: TFile) => Promise<Document>
-  getNoStopBoW: (doc: Document, type?: 'tokens' | 'entities') => Bow
-  getNoStopSet: (doc: Document, type?: 'tokens' | 'entities') => Set<string>
-  getAvgSentimentFromDoc: (
-    doc: Document,
-    opts?: { perSentence?: boolean; normalised?: boolean }
-  ) => number
-  settings: { refreshDocsOnLoad: boolean }
-  worker: Worker
-}
 
 declare module 'obsidian' {
   interface App {
@@ -132,7 +118,6 @@ declare module 'obsidian' {
             update(key: string, value: string, file: TFile): Promise<void>
           }
         }
-        nlp: NLPPlugin
       }
     }
   }
