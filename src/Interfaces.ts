@@ -38,6 +38,7 @@ export type Subtype =
   | 'Otsuka-Chiai'
   | 'Sentiment'
   | 'Resource Allocation'
+  | 'Personalized PageRank'
 
 export interface Communities {
   [group: string]: string[]
