@@ -4,11 +4,11 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
 
 ## 1. Algorithm Architecture Implementation
 
-### BM25F Text Similarity Service (`src/index/BM25Service.ts`)
-- [ ] Create inverted index with field-weighted BM25F scoring
-- [ ] Implement tokenizer (simple regex + lowercase + ASCII folding)
-- [ ] Build sparse vector representation with L2 normalization
-- [ ] Add incremental update capability for changed files
+### BM25F Text Similarity Service (`src/index/BM25Service.ts`) ✅ COMPLETED
+- [x] Create inverted index with field-weighted BM25F scoring
+- [x] Implement tokenizer (simple regex + lowercase + ASCII folding)
+- [x] Build sparse vector representation with L2 normalization
+- [x] Add incremental update capability for changed files
 
 ### Resource Allocation Index (extend `src/MyGraph.ts`)
 - [ ] Implement RA formula: `Σ_{z ∈ neighbors(n)∩neighbors(m)} 1/deg(z)`
@@ -31,7 +31,7 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
 
 ### Upgrade Dependencies
 - [x] Svelte 3.35 → 4.x - *Updated to Svelte 4.x with proper preprocessing*
-- [ ] Remove wink-nlp (replace with simple tokenization)
+- [x] Remove wink-nlp (replace with simple tokenization) - *Completed: Replaced with BM25Service tokenizer*
 - [x] Update Obsidian API to 1.5.0+ - *Updated to obsidian@^1.5.0*
 - [x] Keep Graphology for graph operations - *Retained graphology dependencies*
 
@@ -54,13 +54,13 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
 ## Key Implementation Tasks
 
 1. [x] Set up Vite build system with modern tooling - *✅ COMPLETED: Modern Vite build with fast esbuild compilation*
-2. [ ] Create BM25Service.ts for text indexing/similarity
+2. [x] Create BM25Service.ts for text indexing/similarity - *✅ COMPLETED: Full BM25F implementation with PR review fixes*
 3. [ ] Extend MyGraph.ts with RA and PPR algorithms  
 4. [ ] Update manifest and API usage for Obsidian 1.5.0+
 5. [ ] Simplify Constants.ts to three algorithm types
-6. [ ] Remove legacy NLP dependencies (wink-nlp, sentiment)
+6. [x] Remove legacy NLP dependencies (wink-nlp, sentiment) - *✅ COMPLETED: Removed from package.json and replaced functionality*
 7. [ ] Create efficient caching layer for computations
-8. [ ] Implement incremental index updates
+8. [x] Implement incremental index updates - *✅ COMPLETED: BM25Service supports add/remove/update operations*
 
 ### ✅ Task #1 Summary - Vite Build System Modernization
 - **Status**: Complete
@@ -71,7 +71,22 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
   - Updated Svelte to v4 with proper preprocessing
   - Both production and development builds working successfully
 - **Build output**: `main.js` (326KB, 82KB gzipped)
-- **Next task**: Create BM25Service.ts for text indexing/similarity
+
+### ✅ Task #2 Summary - BM25F Text Similarity Service
+- **Status**: Complete
+- **What was done**:
+  - Implemented full BM25F algorithm with field-weighted scoring (title=2.0x, content=1.0x)
+  - Created inverted index with document frequency tracking and incremental updates
+  - Built custom tokenizer with ASCII folding, stopword removal, and configurable parameters
+  - Added L2 normalization for consistent similarity scores
+  - Integrated into MyGraph.ts replacing legacy BoW cosine similarity
+  - Fixed critical orphan notes indexing issue - now indexes ALL markdown files
+  - Added comprehensive input validation and error handling
+  - Made all parameters configurable via BM25Options interface
+  - Removed wink-nlp dependencies completely
+- **Build output**: `main.js` (329.58KB, 83.26KB gzipped)
+- **PR**: https://github.com/isaaclyon/related-notes/pull/3
+- **Next task**: Implement Resource Allocation and Personalized PageRank algorithms
 
 ## Focus
 This plan focuses on building the foundation for three optimized algorithms while modernizing the tech stack for better performance and maintainability.

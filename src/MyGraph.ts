@@ -708,6 +708,64 @@ export default class MyGraph extends Graph {
       return results
     },
 
+    'Resource Allocation': async (a: string): Promise<ResultMap> => {
+      const results: ResultMap = {}
+      
+      // First, get BM25 similarity candidates to gate the computation
+      const similarNotes = this.bm25Service.getSimilarNotes(a, 400)
+      const candidates = new Set(similarNotes.map(result => result.path))
+      
+      // Get neighbors of source node a
+      const neighborsA = this.neighbors(a)
+      
+      // For each candidate (or all nodes if no BM25 gating)
+      this.forEachNode((to: string) => {
+        // Skip self-comparison
+        if (to === a) {
+          results[to] = { measure: 0, extra: [] }
+          return
+        }
+        
+        // Only compute RA for BM25 candidates (performance optimization)
+        if (candidates.size > 0 && !candidates.has(to)) {
+          results[to] = { measure: 0, extra: [] }
+          return
+        }
+        
+        // Get neighbors of target node
+        const neighborsTo = this.neighbors(to)
+        
+        // Find shared neighbors (intersection)
+        const sharedNeighbors = intersection(neighborsA, neighborsTo)
+        
+        if (sharedNeighbors.length === 0) {
+          results[to] = { measure: 0, extra: [] }
+          return
+        }
+        
+        // Compute Resource Allocation score: RA(a,to) = Σ_{z ∈ sharedNeighbors} 1/deg(z)
+        let raScore = 0
+        const explanations: string[] = []
+        
+        for (const sharedNeighbor of sharedNeighbors) {
+          const degree = this.degree(sharedNeighbor)
+          if (degree > 0) {
+            const contribution = 1 / degree
+            raScore += contribution
+            // Create explanation for this shared neighbor
+            explanations.push(`${sharedNeighbor} (1/${degree})`)
+          }
+        }
+        
+        results[to] = {
+          measure: roundNumber(raScore),
+          extra: explanations
+        }
+      })
+      
+      return results
+    },
+
     // 'Closeness': (a: string) => {
     //     const paths = graphlib.alg.dijkstra(this, a);
     //     const results: number[] = []

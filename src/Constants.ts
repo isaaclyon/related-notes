@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
   algsToShow: [
     'Adamic Adar',
     'Jaccard',
+    'Resource Allocation',
     'Otsuka-Chiai',
     'Co-Citations',
     'Label Propagation',
@@ -52,6 +53,13 @@ export const ANALYSIS_TYPES: SubtypeInfo[] = [
     anl: 'Link Prediction',
     subtype: 'Adamic Adar',
     desc: 'Based on the structure of your graph, this alg predicts which notes _should_ be linked to the current note.',
+    global: false,
+    nlp: false,
+  },
+  {
+    anl: 'Link Prediction',
+    subtype: 'Resource Allocation',
+    desc: 'Predicts which notes should be linked based on shared neighbors weighted by their degree. Higher scores indicate stronger link recommendations.',
     global: false,
     nlp: false,
   },

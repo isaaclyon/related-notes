@@ -33,6 +33,8 @@
   <TableComponent {...props} /> -->
 {:else if currSubtype === 'Jaccard'}
   <TableComponent {...props} />
+{:else if currSubtype === 'Resource Allocation'}
+  <TableComponent {...props} />
 {:else if currSubtype === 'Co-Citations'}
   <CoCitations {...props} />
 {:else if currSubtype === 'Label Propagation'}
