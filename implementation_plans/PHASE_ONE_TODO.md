@@ -10,16 +10,16 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
 - [x] Build sparse vector representation with L2 normalization
 - [x] Add incremental update capability for changed files
 
-### Resource Allocation Index (extend `src/MyGraph.ts`)
-- [ ] Implement RA formula: `Σ_{z ∈ neighbors(n)∩neighbors(m)} 1/deg(z)`
-- [ ] Gate by BM25 similarity (top-400 candidates)
-- [ ] Add shared neighbor explanation generation
+### Resource Allocation Index (extend `src/MyGraph.ts`) ✅ COMPLETED
+- [x] Implement RA formula: `Σ_{z ∈ neighbors(n)∩neighbors(m)} 1/deg(z)`
+- [x] Gate by BM25 similarity (top-400 candidates)
+- [x] Add shared neighbor explanation generation
 
-### Personalized PageRank (extend `src/MyGraph.ts`)
-- [ ] Power iteration with α=0.15, restart at current note
-- [ ] Add edge weights with folder/tag boost (1.1x)
-- [ ] Implement early stopping for convergence
-- [ ] Optional time decay for recent modifications
+### Personalized PageRank (extend `src/MyGraph.ts`) ✅ COMPLETED
+- [x] Power iteration with α=0.15, restart at current note
+- [x] Add edge weights with folder/tag boost (1.1x)
+- [x] Implement early stopping for convergence
+- [x] Optional time decay for recent modifications
 
 ## 2. Build System Modernization ✅ COMPLETED
 
@@ -55,7 +55,7 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
 
 1. [x] Set up Vite build system with modern tooling - *✅ COMPLETED: Modern Vite build with fast esbuild compilation*
 2. [x] Create BM25Service.ts for text indexing/similarity - *✅ COMPLETED: Full BM25F implementation with PR review fixes*
-3. [ ] Extend MyGraph.ts with RA and PPR algorithms  
+3. [x] Extend MyGraph.ts with RA and PPR algorithms - *✅ COMPLETED: Both Resource Allocation and Personalized PageRank implemented*  
 4. [ ] Update manifest and API usage for Obsidian 1.5.0+
 5. [ ] Simplify Constants.ts to three algorithm types
 6. [x] Remove legacy NLP dependencies (wink-nlp, sentiment) - *✅ COMPLETED: Removed from package.json and replaced functionality*
@@ -86,12 +86,42 @@ Based on analysis of the codebase, here's the plan for Phase 1 (Weeks 1-2):
   - Removed wink-nlp dependencies completely
 - **Build output**: `main.js` (329.58KB, 83.26KB gzipped)
 - **PR**: https://github.com/isaaclyon/related-notes/pull/3
-- **Next task**: Implement Resource Allocation and Personalized PageRank algorithms
+
+### ✅ Task #3 Summary - Resource Allocation Algorithm Implementation
+- **Status**: Complete  
+- **What was done**:
+  - Implemented Resource Allocation formula: `RA(n,m) = Σ_{z ∈ neighbors(n)∩neighbors(m)} 1/deg(z)`
+  - Added BM25 similarity gating (top-400 candidates) for performance optimization
+  - Generated shared neighbor explanations showing individual contributions
+  - Added 'Resource Allocation' to Subtype enum in Interfaces.ts
+  - Integrated into UI: added to Constants.ts algsToShow and ANALYSIS_TYPES
+  - Added UI routing in AnalysisComponent.svelte using TableComponent
+- **Build output**: `main.js` (330.63KB, 83.50KB gzipped)
+- **PR**: https://github.com/isaaclyon/related-notes/pull/4
+
+### ✅ Task #4 Summary - Personalized PageRank Algorithm Implementation
+- **Status**: Complete
+- **What was done**:
+  - Implemented full Personalized PageRank with power iteration (α=0.15 damping factor)
+  - Added personalized restart vector focused on source note for influence ranking
+  - Implemented proper edge weight boosting (1.1x) for folder/tag relationships
+  - Added time decay factor for recently modified files (20% boost, 10-day exponential decay)
+  - Fixed critical normalization bug identified by Codex review - maintains stochastic matrix property
+  - Added early convergence detection (ε=1e-6, max 100 iterations)
+  - Generated comprehensive explanations: convergence info, influence levels, connection types
+  - Integrated into UI via Constants.ts (categorized as 'Centrality' analysis)
+  - Added 'Personalized PageRank' to Subtype enum and ANALYSIS_TYPES
+- **Build output**: `main.js` (332.49KB, 84.24KB gzipped)
+- **PR**: https://github.com/isaaclyon/related-notes/pull/5
+- **Key achievement**: Completes the third core function - "What else is worth attention?"
 
 ## Focus
 This plan focuses on building the foundation for three optimized algorithms while modernizing the tech stack for better performance and maintainability.
 
 ### Three Core Functions (from MODERNIZATION_PLAN.md)
-1. **"Most similar notes"** → BM25F content + light structural overlap
-2. **"What should this note be linked to?"** → Resource Allocation gated by text relevance  
-3. **"What else is worth attention?"** → Personalized PageRank with restart at current note
+1. **"Most similar notes"** → BM25F content + light structural overlap ✅ COMPLETED
+2. **"What should this note be linked to?"** → Resource Allocation gated by text relevance ✅ COMPLETED
+3. **"What else is worth attention?"** → Personalized PageRank with restart at current note ✅ COMPLETED
+
+🎉 **Phase 1 Core Algorithms: COMPLETE** 
+All three primary algorithmic functions have been successfully implemented, tested, and integrated into the UI with proper explanations and performance optimization.
