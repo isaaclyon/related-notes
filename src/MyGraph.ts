@@ -833,8 +833,9 @@ export default class MyGraph extends Graph {
               currentPR[node] += contribution
             })
           } else {
-            // Distribute to outgoing neighbors
-            const baseContribution = previousPR[fromNode] / outDegree
+            // First pass: compute all edge weights and total weight
+            const edgeWeights: { [toNode: string]: number } = {}
+            let totalWeight = 0
             
             outNeighbors.forEach(toNode => {
               let edgeWeight = 1.0
@@ -873,7 +874,15 @@ export default class MyGraph extends Graph {
               const timeDecayFactor = Math.exp(-daysSinceModified * 0.1) // Decay over ~10 days
               edgeWeight *= (1 + timeDecayFactor * 0.2) // Up to 20% boost for recent files
               
-              currentPR[toNode] += baseContribution * edgeWeight
+              edgeWeights[toNode] = edgeWeight
+              totalWeight += edgeWeight
+            })
+            
+            // Second pass: distribute normalized contributions to maintain stochastic property
+            outNeighbors.forEach(toNode => {
+              // Normalize contribution by total weight to preserve probability mass
+              const normalizedContribution = previousPR[fromNode] * (edgeWeights[toNode] / totalWeight)
+              currentPR[toNode] += normalizedContribution
             })
           }
         })
