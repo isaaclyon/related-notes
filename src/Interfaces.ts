@@ -37,6 +37,7 @@ export type Subtype =
   // | 'Tversky'
   | 'Otsuka-Chiai'
   | 'Sentiment'
+  | 'Resource Allocation'
 
 export interface Communities {
   [group: string]: string[]
