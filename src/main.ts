@@ -123,7 +123,36 @@ export default class GraphAnalysisPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData())
+    const savedData = await this.loadData()
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, savedData)
+    
+    // Migrate settings: validate defaultSubtypeType exists in current ANALYSIS_TYPES
+    const validSubtypes = ANALYSIS_TYPES.map(t => t.subtype)
+    if (!validSubtypes.includes(this.settings.defaultSubtypeType)) {
+      console.log(`Graph Analysis: Migrating invalid defaultSubtypeType '${this.settings.defaultSubtypeType}' to '${DEFAULT_SETTINGS.defaultSubtypeType}'`)
+      this.settings.defaultSubtypeType = DEFAULT_SETTINGS.defaultSubtypeType
+    }
+    
+    // Migrate settings: filter algsToShow to only include valid algorithms
+    const originalAlgsToShow = this.settings.algsToShow.slice()
+    this.settings.algsToShow = this.settings.algsToShow.filter(alg => validSubtypes.includes(alg))
+    if (this.settings.algsToShow.length !== originalAlgsToShow.length) {
+      console.log(`Graph Analysis: Migrated algsToShow from [${originalAlgsToShow.join(', ')}] to [${this.settings.algsToShow.join(', ')}]`)
+    }
+    
+    // Ensure at least one algorithm is shown
+    if (this.settings.algsToShow.length === 0) {
+      this.settings.algsToShow = [...DEFAULT_SETTINGS.algsToShow]
+      console.log(`Graph Analysis: Restored default algsToShow since none were valid`)
+    }
+    
+    // Save migrated settings
+    if (savedData && (
+      !validSubtypes.includes(savedData.defaultSubtypeType) || 
+      originalAlgsToShow.length !== this.settings.algsToShow.length
+    )) {
+      await this.saveSettings()
+    }
   }
 
   async saveSettings() {

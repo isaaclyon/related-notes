@@ -2,9 +2,10 @@
   import type { SubtypeInfo } from '../Interfaces'
   import FaRegQuestionCircle from 'svelte-icons/fa/FaRegQuestionCircle.svelte'
 
-  export let currSubtypeInfo: SubtypeInfo
+  export let currSubtypeInfo: SubtypeInfo | undefined
 
-  const { anl, desc } = currSubtypeInfo
+  $: anl = currSubtypeInfo?.anl || 'Unknown'
+  $: desc = currSubtypeInfo?.desc || 'No description available'
 </script>
 
 <div class="icon" aria-label={`Type: ${anl}\n\n${desc}`}>

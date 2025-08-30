@@ -37,7 +37,7 @@
   export let view: AnalysisView
   export let currSubtype: Subtype
 
-  $: currSubtypeInfo = ANALYSIS_TYPES.find((sub) => sub.subtype === currSubtype)
+  $: currSubtypeInfo = ANALYSIS_TYPES.find((sub) => sub.subtype === currSubtype) || ANALYSIS_TYPES[0]
   let frozen = false
   let ascOrder = false
   let { noInfinity, noZero } = settings
@@ -63,7 +63,7 @@
   let { resolvedLinks } = app.metadataCache
 
   app.workspace.on('active-leaf-change', () => {
-    if (!frozen && !currSubtypeInfo.global) {
+    if (!frozen && !currSubtypeInfo?.global) {
       blockSwitch = true
       newBatch = []
       visibleData = []
@@ -162,7 +162,7 @@
     {#await promiseSortedResults then sortedResults}
       {#key sortedResults}
         {#each visibleData as node}
-          {#if (currSubtypeInfo.global || node.to !== currNode) && node !== undefined}
+          {#if (currSubtypeInfo?.global || node.to !== currNode) && node !== undefined}
             <!-- svelte-ignore a11y-unknown-aria-attribute -->
             <tr
               class="{node.linked ? LINKED : NOT_LINKED} 
