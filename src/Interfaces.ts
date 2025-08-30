@@ -19,26 +19,11 @@ export type Analyses =
   | 'Centrality'
   | 'Link Prediction'
   | 'Similarity'
-  | 'Co-Citations'
-  | 'Community Detection'
-  | 'NLP'
 
 export type Subtype =
-  | 'HITS'
-  | 'Adamic Adar'
-  // | 'Common Neighbours'
-  | 'Jaccard'
-  | 'Co-Citations'
-  | 'Label Propagation'
-  | 'Louvain'
-  | 'Overlap'
-  | 'Clustering Coefficient'
-  | 'BoW'
-  // | 'Tversky'
-  | 'Otsuka-Chiai'
-  | 'Sentiment'
   | 'Resource Allocation'
   | 'Personalized PageRank'
+  | 'Otsuka-Chiai'
 
 export interface Communities {
   [group: string]: string[]

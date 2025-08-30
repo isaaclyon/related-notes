@@ -1,14 +1,10 @@
 <script lang="ts">
   import type { App } from 'obsidian'
-  import Louvain from './Louvain.svelte'
   import type AnalysisView from '../AnalysisView'
   import type { GraphAnalysisSettings, Subtype } from '../Interfaces'
   import type GraphAnalysisPlugin from '../main'
-  import CoCitations from './CoCitations.svelte'
-  import LabelPropagation from './LabelPropagation.svelte'
   import ScrollSelector from './ScrollSelector.svelte'
   import TableComponent from './TableComponent.svelte'
-  import HITS from './HITS.svelte'
 
   export let app: App
   export let plugin: GraphAnalysisPlugin
@@ -27,32 +23,13 @@
 
 <ScrollSelector bind:currSubtype {view} />
 
-{#if currSubtype === 'Adamic Adar'}
+{#if currSubtype === 'Resource Allocation'}
   <TableComponent {...props} />
-<!-- {:else if currSubtype === 'Common Neighbours'}
-  <TableComponent {...props} /> -->
-{:else if currSubtype === 'Jaccard'}
-  <TableComponent {...props} />
-{:else if currSubtype === 'Resource Allocation'}
-  <TableComponent {...props} />
-{:else if currSubtype === 'Co-Citations'}
-  <CoCitations {...props} />
-{:else if currSubtype === 'Label Propagation'}
-  <LabelPropagation {...props} />
-{:else if currSubtype === 'Overlap'}
-  <TableComponent {...props} />
-{:else if currSubtype === 'Clustering Coefficient'}
-  <TableComponent {...props} />
-{:else if currSubtype === 'BoW'}
+{:else if currSubtype === 'Personalized PageRank'}
   <TableComponent {...props} />
 {:else if currSubtype === 'Otsuka-Chiai'}
   <TableComponent {...props} />
-  <!-- {:else if currSubtype === 'Tversky'}
-  <TableComponent {...props} /> -->
-{:else if currSubtype === 'Sentiment'}
+{:else}
+  <!-- Fallback for any undefined algorithms -->
   <TableComponent {...props} />
-{:else if currSubtype === 'Louvain'}
-  <Louvain {...props} />
-{:else if currSubtype === 'HITS'}
-  <HITS {...props} />
 {/if}
