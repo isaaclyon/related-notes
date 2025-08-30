@@ -14,7 +14,7 @@
   import GoSignOut from 'svelte-icons/go/GoSignOut.svelte'
   import GoSignIn from 'svelte-icons/go/GoSignIn.svelte'
 
-  export let currSubtypeInfo: SubtypeInfo
+  export let currSubtypeInfo: SubtypeInfo | undefined
   export let noZero: boolean = undefined
   export let sortBy: boolean = undefined
   export let ascOrder: boolean = undefined
@@ -87,7 +87,7 @@
       aria-label={frozen ? `Frozen on: ${currFile.basename}` : 'Unfrozen'}
       on:click={() => {
         frozen = !frozen
-        if (!frozen && !currSubtypeInfo.global) {
+        if (!frozen && !currSubtypeInfo?.global) {
           blockSwitch = true
           newBatch = []
           visibleData = []
@@ -95,7 +95,7 @@
           page = 0
 
           setTimeout(() => (currFile = app.workspace.getActiveFile()), 100)
-        } else if (!frozen && currSubtypeInfo.global) {
+        } else if (!frozen && currSubtypeInfo?.global) {
           blockSwitch = true
           setTimeout(() => {
             blockSwitch = false
@@ -143,7 +143,7 @@
     aria-label="Refresh Index"
     on:click={async () => {
       await plugin.refreshGraph()
-      await view.draw(currSubtypeInfo.subtype)
+      await view.draw(currSubtypeInfo?.subtype || 'Resource Allocation')
     }}
   >
     <span class="icon">
