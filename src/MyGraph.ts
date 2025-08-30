@@ -28,7 +28,7 @@ import type {
   Subtype,
 } from './Interfaces'
 import { addPreCocitation, findSentence, getCounts, getMaxKey, roundNumber, sum } from './Utility'
-import { BM25Service, type ScoredResult } from './index/BM25Service'
+import { BM25Service, type ScoredResult, type BM25Options } from './index/BM25Service'
 
 export default class MyGraph extends Graph {
   app: App
@@ -106,6 +106,9 @@ export default class MyGraph extends Graph {
     if (addUnresolved) {
       for (const source in unresolvedLinks) {
         if (includeRegex(source)) {
+          // Add unresolved link sources to BM25 index as well
+          filesToIndex.add(source)
+          
           if (!this.hasNode(source)) {
             this.addNode(source, { i })
             i++
@@ -114,6 +117,9 @@ export default class MyGraph extends Graph {
           for (const dest in unresolvedLinks[source]) {
             const destMD = dest + '.md'
             if (includeRegex(destMD)) {
+              // Add unresolved link destinations to BM25 index as well  
+              filesToIndex.add(destMD)
+              
               if (!this.hasNode(destMD)) {
                 this.addNode(destMD, { i })
                 i++
@@ -122,6 +128,17 @@ export default class MyGraph extends Graph {
             }
           }
         }
+      }
+    }
+
+    // Ensure all markdown files in vault are indexed for BM25 similarity (including orphan notes)
+    const allFiles = this.app.vault.getMarkdownFiles()
+    for (const file of allFiles) {
+      const filePath = file.path
+      const tags = this.app.metadataCache.getCache(filePath)?.tags
+      
+      if (includeTag(tags) && includeRegex(filePath) && includeExt(filePath)) {
+        filesToIndex.add(filePath)
       }
     }
     return this

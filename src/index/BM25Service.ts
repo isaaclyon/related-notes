@@ -20,6 +20,24 @@ export interface FieldFrequencies {
   content: number
 }
 
+export interface BM25Options {
+  /** BM25 term frequency saturation parameter (default: 1.2) */
+  k1?: number
+  /** BM25 field length normalization parameter (default: 0.75) */
+  b?: number
+  /** Field weights for different document sections */
+  fieldWeights?: {
+    title?: number
+    content?: number
+  }
+  /** Maximum query length for getSimilarNotes (default: 500) */
+  maxQueryLength?: number
+  /** Minimum token length for indexing (default: 2) */
+  minTokenLength?: number
+  /** Default query result limit (default: 10) */
+  defaultQueryLimit?: number
+}
+
 export class BM25Service {
   private index: Map<string, InvertedIndexEntry> = new Map()
   private documents: Map<string, DocumentFields> = new Map()
@@ -27,14 +45,25 @@ export class BM25Service {
   private avgDocLength = 0
   private totalLength = 0
 
-  // BM25F parameters
-  private readonly k1 = 1.2
-  private readonly b = 0.75
-  
-  // Field weights
-  private readonly fieldWeights = {
-    title: 2.0,
-    content: 1.0
+  // BM25F parameters - configurable via constructor options
+  private readonly k1: number
+  private readonly b: number
+  private readonly fieldWeights: { title: number; content: number }
+  private readonly DEFAULT_QUERY_LIMIT: number
+  private readonly MAX_QUERY_LENGTH: number
+  private readonly MIN_TOKEN_LENGTH: number
+
+  constructor(options: BM25Options = {}) {
+    // Apply defaults for all configuration options
+    this.k1 = options.k1 ?? 1.2
+    this.b = options.b ?? 0.75
+    this.fieldWeights = {
+      title: options.fieldWeights?.title ?? 2.0,
+      content: options.fieldWeights?.content ?? 1.0
+    }
+    this.MAX_QUERY_LENGTH = options.maxQueryLength ?? 500
+    this.MIN_TOKEN_LENGTH = options.minTokenLength ?? 2
+    this.DEFAULT_QUERY_LIMIT = options.defaultQueryLimit ?? 10
   }
 
   // Basic English stopwords
@@ -66,7 +95,7 @@ export class BM25Service {
       .replace(/[\u0300-\u036f]/g, '')
       .replace(/[^\w\s]/g, ' ')
       .split(/\s+/)
-      .filter(token => token.length > 2 && !this.stopwords.has(token))
+      .filter(token => token.length > this.MIN_TOKEN_LENGTH && !this.stopwords.has(token))
   }
 
   /**
@@ -223,13 +252,17 @@ export class BM25Service {
       
       // Title field
       if (fieldFreqs.title > 0) {
-        const normalizedTf = fieldFreqs.title / (1 + this.b * (doc.length / this.avgDocLength - 1))
+        // Prevent division by zero when avgDocLength is 0
+        const lengthNorm = this.avgDocLength > 0 ? doc.length / this.avgDocLength : 1
+        const normalizedTf = fieldFreqs.title / (1 + this.b * (lengthNorm - 1))
         fieldScore += this.fieldWeights.title * (normalizedTf / (this.k1 + normalizedTf))
       }
       
       // Content field
       if (fieldFreqs.content > 0) {
-        const normalizedTf = fieldFreqs.content / (1 + this.b * (doc.length / this.avgDocLength - 1))
+        // Prevent division by zero when avgDocLength is 0
+        const lengthNorm = this.avgDocLength > 0 ? doc.length / this.avgDocLength : 1
+        const normalizedTf = fieldFreqs.content / (1 + this.b * (lengthNorm - 1))
         fieldScore += this.fieldWeights.content * (normalizedTf / (this.k1 + normalizedTf))
       }
       
@@ -246,7 +279,7 @@ export class BM25Service {
    * @returns Array of scored results sorted by relevance
    * @throws Error if query is invalid
    */
-  search(query: string, limit = 10): ScoredResult[] {
+  search(query: string, limit = this.DEFAULT_QUERY_LIMIT): ScoredResult[] {
     // Input validation
     if (!query || typeof query !== 'string') {
       throw new Error('Query must be a non-empty string')
@@ -310,7 +343,7 @@ export class BM25Service {
    * @returns Array of scored results sorted by similarity (excluding the source document)
    * @throws Error if notePath is invalid
    */
-  getSimilarNotes(notePath: string, limit = 10): ScoredResult[] {
+  getSimilarNotes(notePath: string, limit = this.DEFAULT_QUERY_LIMIT): ScoredResult[] {
     // Input validation
     if (!notePath || typeof notePath !== 'string') {
       throw new Error('Note path must be a non-empty string')
@@ -321,8 +354,8 @@ export class BM25Service {
     const doc = this.documents.get(notePath)
     if (!doc) return []
     
-    // Use document content as query
-    const query = `${doc.title} ${doc.content}`.substring(0, 500) // Limit query length
+    // Use document content as query (limit length for performance)
+    const query = `${doc.title} ${doc.content}`.substring(0, this.MAX_QUERY_LENGTH)
     return this.search(query, limit + 1) // +1 to exclude self
       .filter(result => result.path !== notePath)
       .slice(0, limit)
