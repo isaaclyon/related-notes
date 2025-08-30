@@ -766,6 +766,182 @@ export default class MyGraph extends Graph {
       return results
     },
 
+    'Personalized PageRank': async (a: string): Promise<ResultMap> => {
+      const results: ResultMap = {}
+      const alpha = 0.15 // Restart probability
+      const epsilon = 1e-6 // Convergence threshold
+      const maxIterations = 100
+      const folderTagBoost = 1.1 // Boost for folder/tag relationships
+      
+      // Get all nodes
+      const nodes = this.nodes()
+      const nodeCount = nodes.length
+      
+      if (nodeCount === 0) return results
+      
+      // Initialize PageRank values: equal probability for all nodes
+      let currentPR: { [node: string]: number } = {}
+      let previousPR: { [node: string]: number } = {}
+      
+      const initialValue = 1.0 / nodeCount
+      nodes.forEach(node => {
+        currentPR[node] = initialValue
+        previousPR[node] = initialValue
+      })
+      
+      // Create restart vector (1 for source node a, 0 for others)
+      const restartVector: { [node: string]: number } = {}
+      nodes.forEach(node => {
+        restartVector[node] = node === a ? 1.0 : 0.0
+      })
+      
+      // Get file modification times for time decay (optional feature)
+      const getFileModTime = (filePath: string): number => {
+        try {
+          const file = this.app.vault.getAbstractFileByPath(filePath)
+          return file ? file.stat.mtime : 0
+        } catch {
+          return 0
+        }
+      }
+      
+      const currentTime = Date.now()
+      const dayInMs = 24 * 60 * 60 * 1000
+      
+      // Power iteration
+      let iteration = 0
+      let converged = false
+      
+      while (iteration < maxIterations && !converged) {
+        // Store previous values
+        previousPR = { ...currentPR }
+        
+        // Reset current values
+        nodes.forEach(node => {
+          currentPR[node] = 0
+        })
+        
+        // For each node, distribute its PageRank to its neighbors
+        nodes.forEach(fromNode => {
+          const outNeighbors = this.outNeighbors(fromNode)
+          const outDegree = outNeighbors.length
+          
+          if (outDegree === 0) {
+            // Dangling node: distribute equally to all nodes
+            const contribution = previousPR[fromNode] / nodeCount
+            nodes.forEach(node => {
+              currentPR[node] += contribution
+            })
+          } else {
+            // Distribute to outgoing neighbors
+            const baseContribution = previousPR[fromNode] / outDegree
+            
+            outNeighbors.forEach(toNode => {
+              let edgeWeight = 1.0
+              
+              // Apply folder/tag boost
+              try {
+                const fromFile = this.app.vault.getAbstractFileByPath(fromNode)
+                const toFile = this.app.vault.getAbstractFileByPath(toNode)
+                
+                if (fromFile && toFile && 'parent' in fromFile && 'parent' in toFile) {
+                  // Same folder boost
+                  if (fromFile.parent?.path === toFile.parent?.path) {
+                    edgeWeight *= folderTagBoost
+                  }
+                }
+                
+                // Tag similarity boost (check if notes share tags)
+                const fromCache = this.app.metadataCache.getCache(fromNode)
+                const toCache = this.app.metadataCache.getCache(toNode)
+                const fromTags = fromCache?.tags?.map(t => t.tag) || []
+                const toTags = toCache?.tags?.map(t => t.tag) || []
+                
+                if (fromTags.length > 0 && toTags.length > 0) {
+                  const sharedTags = fromTags.filter(tag => toTags.includes(tag))
+                  if (sharedTags.length > 0) {
+                    edgeWeight *= folderTagBoost
+                  }
+                }
+              } catch {
+                // If file operations fail, use base weight
+              }
+              
+              // Optional time decay: boost recently modified files
+              const modTime = getFileModTime(toNode)
+              const daysSinceModified = (currentTime - modTime) / dayInMs
+              const timeDecayFactor = Math.exp(-daysSinceModified * 0.1) // Decay over ~10 days
+              edgeWeight *= (1 + timeDecayFactor * 0.2) // Up to 20% boost for recent files
+              
+              currentPR[toNode] += baseContribution * edgeWeight
+            })
+          }
+        })
+        
+        // Apply damping factor and restart probability
+        nodes.forEach(node => {
+          currentPR[node] = (1 - alpha) * currentPR[node] + alpha * restartVector[node]
+        })
+        
+        // Check convergence
+        let maxDiff = 0
+        nodes.forEach(node => {
+          const diff = Math.abs(currentPR[node] - previousPR[node])
+          maxDiff = Math.max(maxDiff, diff)
+        })
+        
+        if (maxDiff < epsilon) {
+          converged = true
+        }
+        
+        iteration++
+      }
+      
+      // Convert to ResultMap format with influence path explanations
+      nodes.forEach(node => {
+        if (node === a) {
+          results[node] = { measure: 0, extra: [] }
+          return
+        }
+        
+        const score = currentPR[node]
+        const explanations: string[] = []
+        
+        // Add convergence info
+        explanations.push(`Converged in ${iteration} iterations`)
+        
+        // Add influence explanation
+        if (score > initialValue * 1.5) {
+          explanations.push('High influence from source')
+        } else if (score > initialValue) {
+          explanations.push('Moderate influence from source')
+        } else {
+          explanations.push('Low influence from source')
+        }
+        
+        // Check if this node has direct or strong indirect connections to source
+        const directNeighbors = this.neighbors(a)
+        if (directNeighbors.includes(node)) {
+          explanations.push('Directly connected')
+        } else {
+          // Check for two-hop connections
+          const twoHopConnected = directNeighbors.some(neighbor => 
+            this.neighbors(neighbor).includes(node)
+          )
+          if (twoHopConnected) {
+            explanations.push('Two-hop connection')
+          }
+        }
+        
+        results[node] = {
+          measure: roundNumber(score),
+          extra: explanations
+        }
+      })
+      
+      return results
+    },
+
     // 'Closeness': (a: string) => {
     //     const paths = graphlib.alg.dijkstra(this, a);
     //     const results: number[] = []
