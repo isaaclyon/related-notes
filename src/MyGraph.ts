@@ -94,7 +94,7 @@ export default class MyGraph extends Graph {
         try {
           const content = await this.app.vault.cachedRead(file)
           const cache = this.app.metadataCache.getCache(filePath)
-          const title = cache?.frontmatter?.title || file.basename
+          const title = cache?.frontmatter?.title || file.basename || 'Untitled'
           
           this.bm25Service.indexDocument(filePath, title, content)
         } catch (error) {

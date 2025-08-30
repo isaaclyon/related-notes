@@ -70,29 +70,23 @@ export class BM25Service {
   }
 
   /**
-   * Calculate field frequencies for a document
+   * Calculate field frequencies for a specific term in a document
+   * @param term - The term to calculate frequencies for
+   * @param title - Document title
+   * @param content - Document content
+   * @returns Field frequencies for the term
    */
-  private calculateFieldFrequencies(title: string, content: string): FieldFrequencies {
+  private calculateFieldFrequencies(term: string, title: string, content: string): FieldFrequencies {
     const titleTokens = this.tokenize(title)
     const contentTokens = this.tokenize(content)
     
-    const frequencies: FieldFrequencies = { title: 0, content: 0 }
-    
-    // Count title term frequencies
-    const titleCounts = new Map<string, number>()
-    for (const token of titleTokens) {
-      titleCounts.set(token, (titleCounts.get(token) || 0) + 1)
-    }
-    
-    // Count content term frequencies
-    const contentCounts = new Map<string, number>()
-    for (const token of contentTokens) {
-      contentCounts.set(token, (contentCounts.get(token) || 0) + 1)
-    }
+    // Count term frequencies in each field
+    const titleTf = titleTokens.filter(token => token === term).length
+    const contentTf = contentTokens.filter(token => token === term).length
     
     return { 
-      title: titleCounts.size,
-      content: contentCounts.size
+      title: titleTf,
+      content: contentTf
     }
   }
 
@@ -110,8 +104,22 @@ export class BM25Service {
 
   /**
    * Add or update a document in the index
+   * @param path - Unique document path/identifier
+   * @param title - Document title
+   * @param content - Document content
+   * @throws Error if path is empty or invalid
    */
   indexDocument(path: string, title: string, content: string): void {
+    // Input validation
+    if (!path || typeof path !== 'string') {
+      throw new Error('Document path must be a non-empty string')
+    }
+    if (title === null || title === undefined) {
+      throw new Error('Document title cannot be null or undefined')
+    }
+    if (content === null || content === undefined) {
+      throw new Error('Document content cannot be null or undefined')
+    }
     // Remove existing document if it exists
     if (this.documents.has(path)) {
       this.removeDocument(path)
@@ -167,8 +175,12 @@ export class BM25Service {
 
   /**
    * Remove a document from the index
+   * @param path - Document path to remove
    */
   removeDocument(path: string): void {
+    if (!path || typeof path !== 'string') {
+      return // Silently ignore invalid paths for removal
+    }
     if (!this.documents.has(path)) return
     
     // Remove from document frequency counts
@@ -229,8 +241,19 @@ export class BM25Service {
 
   /**
    * Search for documents matching a query
+   * @param query - Search query string
+   * @param limit - Maximum number of results to return (default: 10)
+   * @returns Array of scored results sorted by relevance
+   * @throws Error if query is invalid
    */
   search(query: string, limit = 10): ScoredResult[] {
+    // Input validation
+    if (!query || typeof query !== 'string') {
+      throw new Error('Query must be a non-empty string')
+    }
+    if (limit < 0 || !Number.isInteger(limit)) {
+      throw new Error('Limit must be a non-negative integer')
+    }
     const queryTerms = this.tokenize(query)
     if (queryTerms.length === 0) return []
     
@@ -281,9 +304,20 @@ export class BM25Service {
   }
 
   /**
-   * Find similar notes to a given note
+   * Find similar notes to a given note using its content as query
+   * @param notePath - Path of the note to find similar documents for
+   * @param limit - Maximum number of results to return (default: 10)
+   * @returns Array of scored results sorted by similarity (excluding the source document)
+   * @throws Error if notePath is invalid
    */
   getSimilarNotes(notePath: string, limit = 10): ScoredResult[] {
+    // Input validation
+    if (!notePath || typeof notePath !== 'string') {
+      throw new Error('Note path must be a non-empty string')
+    }
+    if (limit < 0 || !Number.isInteger(limit)) {
+      throw new Error('Limit must be a non-negative integer')
+    }
     const doc = this.documents.get(notePath)
     if (!doc) return []
     
@@ -295,7 +329,8 @@ export class BM25Service {
   }
 
   /**
-   * Get index statistics
+   * Get index statistics for monitoring and debugging
+   * @returns Object containing index statistics
    */
   getStats() {
     return {
@@ -306,7 +341,8 @@ export class BM25Service {
   }
 
   /**
-   * Clear the entire index
+   * Clear the entire index and reset all statistics
+   * Used when reinitializing the index
    */
   clear(): void {
     this.index.clear()
