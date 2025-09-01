@@ -27,7 +27,7 @@ export default class GraphAnalysisPlugin extends Plugin {
 
     this.addCommand({
       id: 'show-graph-analysis-view',
-      name: 'Open Graph Analysis View',
+      name: 'Open Related Notes View',
       checkCallback: (checking: boolean) => {
         let checkResult =
           this.app.workspace.getLeavesOfType(VIEW_TYPE_GRAPH_ANALYSIS)
@@ -45,7 +45,7 @@ export default class GraphAnalysisPlugin extends Plugin {
 
     this.addCommand({
       id: 'refresh-analysis-view',
-      name: 'Refresh Graph Analysis View',
+      name: 'Refresh Related Notes View',
       callback: async () => {
         await this.refreshGraph()
         const currView = await this.getCurrentView()
@@ -154,7 +154,7 @@ export default class GraphAnalysisPlugin extends Plugin {
     } catch (error) {
       console.log(error)
       new Notice(
-        'An error occured with Graph Analysis, please check the console.'
+        'An error occured with Related Notes, please check the console.'
       )
     }
   }
@@ -316,7 +316,7 @@ export default class GraphAnalysisPlugin extends Plugin {
     // Migrate settings: validate defaultSubtypeType exists in current ANALYSIS_TYPES
     const validSubtypes = ANALYSIS_TYPES.map(t => t.subtype)
     if (!validSubtypes.includes(this.settings.defaultSubtypeType)) {
-      console.log(`Graph Analysis: Migrating invalid defaultSubtypeType '${this.settings.defaultSubtypeType}' to '${DEFAULT_SETTINGS.defaultSubtypeType}'`)
+      console.log(`Related Notes: Migrating invalid defaultSubtypeType '${this.settings.defaultSubtypeType}' to '${DEFAULT_SETTINGS.defaultSubtypeType}'`)
       this.settings.defaultSubtypeType = DEFAULT_SETTINGS.defaultSubtypeType
     }
     
@@ -324,13 +324,13 @@ export default class GraphAnalysisPlugin extends Plugin {
     const originalAlgsToShow = this.settings.algsToShow.slice()
     this.settings.algsToShow = this.settings.algsToShow.filter(alg => validSubtypes.includes(alg))
     if (this.settings.algsToShow.length !== originalAlgsToShow.length) {
-      console.log(`Graph Analysis: Migrated algsToShow from [${originalAlgsToShow.join(', ')}] to [${this.settings.algsToShow.join(', ')}]`)
+      console.log(`Related Notes: Migrated algsToShow from [${originalAlgsToShow.join(', ')}] to [${this.settings.algsToShow.join(', ')}]`)
     }
     
     // Ensure at least one algorithm is shown
     if (this.settings.algsToShow.length === 0) {
       this.settings.algsToShow = [...DEFAULT_SETTINGS.algsToShow]
-      console.log(`Graph Analysis: Restored default algsToShow since none were valid`)
+      console.log(`Related Notes: Restored default algsToShow since none were valid`)
     }
     
     // Save migrated settings

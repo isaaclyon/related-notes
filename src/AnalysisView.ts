@@ -28,7 +28,7 @@ export default class AnalysisView extends ItemView {
   }
 
   getDisplayText(): string {
-    return 'Graph Analysis'
+    return 'Related Notes'
   }
 
   icon = 'GA-ICON'

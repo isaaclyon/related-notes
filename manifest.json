@@ -1,10 +1,10 @@
 {
-	"id": "graph-analysis",
-	"name": "Graph Analysis",
+	"id": "related-notes",
+	"name": "Related Notes",
 	"version": "0.15.5",
 	"minAppVersion": "1.4.0",
-	"description": "Analyse your Obsidian graph using advanced algorithms for link prediction, similarity, and centrality.",
-	"author": "isaaclyon (fork of SkepticMystic)",
+	"description": "Discover meaningful relationships between notes using advanced algorithms for link prediction, similarity, and influence ranking.",
+	"author": "isaaclyon",
 	"authorUrl": "https://github.com/isaaclyon/related-notes",
 	"isDesktopOnly": false
 }
