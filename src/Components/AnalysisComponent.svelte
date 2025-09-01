@@ -5,6 +5,7 @@
   import type GraphAnalysisPlugin from '../main'
   import ScrollSelector from './ScrollSelector.svelte'
   import TableComponent from './TableComponent.svelte'
+  import UnifiedTableComponent from './UnifiedTableComponent.svelte'
 
   export let app: App
   export let plugin: GraphAnalysisPlugin
@@ -23,7 +24,9 @@
 
 <ScrollSelector bind:currSubtype {view} />
 
-{#if currSubtype === 'Link Suggestions'}
+{#if currSubtype === 'Home'}
+  <UnifiedTableComponent {...props} />
+{:else if currSubtype === 'Link Suggestions'}
   <TableComponent {...props} />
 {:else if currSubtype === 'Relevant Notes'}
   <TableComponent {...props} />

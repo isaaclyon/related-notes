@@ -19,8 +19,10 @@ export type Analyses =
   | 'Centrality'
   | 'Link Prediction'
   | 'Similarity'
+  | 'Unified Recommendations'
 
 export type Subtype =
+  | 'Home'
   | 'Link Suggestions'
   | 'Relevant Notes'
   | 'Similar Content'
@@ -88,6 +90,10 @@ export interface GraphAnalysisSettings {
   exclusionRegex: string
   exclusionTags: string[]
   algsToShow: Subtype[]
+  homeWeightLinkSuggestions: number
+  homeWeightRelevantNotes: number
+  homeWeightSimilarContent: number
+  homeMaxResults: number
 }
 
 

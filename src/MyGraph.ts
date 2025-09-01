@@ -40,6 +40,7 @@ export default class MyGraph extends Graph {
   private pageRankCache: LRUCache<ResultMap>
   private resourceAllocationCache: LRUCache<ResultMap>
   private similarityCache: LRUCache<ResultMap>
+  private unifiedRecommendationsCache: LRUCache<ResultMap>
 
   constructor(app: App, settings: GraphAnalysisSettings) {
     super()
@@ -51,6 +52,7 @@ export default class MyGraph extends Graph {
     this.pageRankCache = new LRUCache<ResultMap>(50, 15) // 50 entries, 15 min TTL
     this.resourceAllocationCache = new LRUCache<ResultMap>(200, 30) // 200 entries, 30 min TTL  
     this.similarityCache = new LRUCache<ResultMap>(100, 20) // 100 entries, 20 min TTL
+    this.unifiedRecommendationsCache = new LRUCache<ResultMap>(75, 10) // 75 entries, 10 min TTL
   }
 
   async initGraph(): Promise<MyGraph> {
@@ -174,7 +176,8 @@ export default class MyGraph extends Graph {
     return {
       pageRank: this.pageRankCache.getStats(),
       resourceAllocation: this.resourceAllocationCache.getStats(),
-      similarity: this.similarityCache.getStats()
+      similarity: this.similarityCache.getStats(),
+      unifiedRecommendations: this.unifiedRecommendationsCache.getStats()
     }
   }
 
@@ -183,6 +186,128 @@ export default class MyGraph extends Graph {
       ResultMap | CoCitationMap | Communities | string[] | HITSResult
     >
   } = {
+    Home: async (a: string): Promise<ResultMap> => {
+      // Check cache first
+      const cacheKey = `${a}_${this.settings.homeWeightLinkSuggestions}_${this.settings.homeWeightRelevantNotes}_${this.settings.homeWeightSimilarContent}`
+      const cached = this.unifiedRecommendationsCache.get(cacheKey)
+      if (cached) {
+        return cached
+      }
+
+      const results: ResultMap = {}
+      
+      // Get weights from settings (convert to decimals)
+      const linkWeight = this.settings.homeWeightLinkSuggestions / 100
+      const relevantWeight = this.settings.homeWeightRelevantNotes / 100
+      const contentWeight = this.settings.homeWeightSimilarContent / 100
+      
+      // Run all three algorithms in parallel
+      const [linkResults, relevantResults, contentResults] = await Promise.all([
+        this.algs['Link Suggestions'](a),
+        this.algs['Relevant Notes'](a),
+        this.algs['Similar Content'](a)
+      ])
+      
+      // Get all nodes for min/max normalization
+      const allNodes = new Set([
+        ...Object.keys(linkResults),
+        ...Object.keys(relevantResults), 
+        ...Object.keys(contentResults)
+      ])
+      
+      // Calculate min/max for each algorithm (excluding zeros)
+      const getLinkMinMax = () => {
+        const scores = Object.values(linkResults).map(r => r.measure).filter(s => s > 0)
+        return { min: Math.min(...scores), max: Math.max(...scores) }
+      }
+      
+      const getRelevantMinMax = () => {
+        const scores = Object.values(relevantResults).map(r => r.measure).filter(s => s > 0)
+        return { min: Math.min(...scores), max: Math.max(...scores) }
+      }
+      
+      const getContentMinMax = () => {
+        const scores = Object.values(contentResults).map(r => r.measure).filter(s => s > 0)
+        return { min: Math.min(...scores), max: Math.max(...scores) }
+      }
+      
+      const linkMinMax = getLinkMinMax()
+      const relevantMinMax = getRelevantMinMax()
+      const contentMinMax = getContentMinMax()
+      
+      // Normalize and combine scores
+      for (const node of allNodes) {
+        if (node === a) continue // Skip self
+        
+        const linkScore = linkResults[node]?.measure || 0
+        const relevantScore = relevantResults[node]?.measure || 0
+        const contentScore = contentResults[node]?.measure || 0
+        
+        // Normalize scores using min/max (only if non-zero)
+        const normalizeScore = (score: number, minMax: { min: number, max: number }) => {
+          if (score === 0 || minMax.max === minMax.min) return 0
+          return (score - minMax.min) / (minMax.max - minMax.min)
+        }
+        
+        const normalizedLink = normalizeScore(linkScore, linkMinMax)
+        const normalizedRelevant = normalizeScore(relevantScore, relevantMinMax) 
+        const normalizedContent = normalizeScore(contentScore, contentMinMax)
+        
+        // Count contributing algorithms (exclude zeros)
+        const contributingAlgos = [
+          linkScore > 0 ? linkWeight : 0,
+          relevantScore > 0 ? relevantWeight : 0, 
+          contentScore > 0 ? contentWeight : 0
+        ].filter(w => w > 0)
+        
+        // Skip if no algorithms contributed
+        if (contributingAlgos.length === 0) continue
+        
+        // Calculate weighted average (only using contributing algorithms)
+        const totalWeight = contributingAlgos.reduce((sum, w) => sum + w, 0)
+        const weightedSum = (linkScore > 0 ? normalizedLink * linkWeight : 0) +
+                           (relevantScore > 0 ? normalizedRelevant * relevantWeight : 0) +
+                           (contentScore > 0 ? normalizedContent * contentWeight : 0)
+        
+        const unifiedScore = weightedSum / totalWeight
+        
+        // Create algorithm breakdown for display
+        const getIndicator = (score: number, minMax: { min: number, max: number }) => {
+          if (score === 0) return '—'
+          const normalized = normalizeScore(score, minMax)
+          if (normalized >= 0.67) return '⬆️'
+          if (normalized >= 0.33) return '➡️'
+          return '⬇️'
+        }
+        
+        const breakdown = [
+          getIndicator(linkScore, linkMinMax),
+          getIndicator(relevantScore, relevantMinMax),
+          getIndicator(contentScore, contentMinMax)
+        ]
+        
+        results[node] = {
+          measure: roundNumber(unifiedScore),
+          extra: breakdown
+        }
+      }
+      
+      // Sort and limit results
+      const sortedResults: ResultMap = {}
+      const sortedEntries = Object.entries(results)
+        .sort(([, a], [, b]) => b.measure - a.measure)
+        .slice(0, this.settings.homeMaxResults)
+      
+      for (const [node, result] of sortedEntries) {
+        sortedResults[node] = result
+      }
+      
+      // Cache results
+      this.unifiedRecommendationsCache.set(cacheKey, sortedResults)
+      
+      return sortedResults
+    },
+
     Jaccard: async (a: string): Promise<ResultMap> => {
       const Na = this.neighbors(a)
       const results: ResultMap = {}

@@ -46,6 +46,124 @@ export class SampleSettingTab extends PluginSettingTab {
       },
     })
 
+    containerEl.createEl('h3', { text: 'Home Tab Configuration' })
+
+    new Setting(containerEl)
+      .setName('Link Suggestions Weight')
+      .setDesc('Weight for Link Suggestions algorithm in unified recommendations (0-100%)')
+      .addSlider((slider) => {
+        slider
+          .setLimits(0, 100, 1)
+          .setValue(settings.homeWeightLinkSuggestions)
+          .onChange(async (value) => {
+            settings.homeWeightLinkSuggestions = value
+            await plugin.saveSettings()
+          })
+        slider.sliderEl.onmouseup = () => {
+          // Ensure weights don't exceed 100% total
+          const total = settings.homeWeightLinkSuggestions + 
+                       settings.homeWeightRelevantNotes + 
+                       settings.homeWeightSimilarContent
+          if (total > 100) {
+            const excess = total - 100
+            const reduce = Math.min(excess / 2, settings.homeWeightRelevantNotes, settings.homeWeightSimilarContent)
+            settings.homeWeightRelevantNotes = Math.max(0, settings.homeWeightRelevantNotes - reduce)
+            settings.homeWeightSimilarContent = Math.max(0, settings.homeWeightSimilarContent - (excess - reduce))
+            plugin.saveSettings()
+            this.display() // Refresh settings display
+          }
+        }
+      })
+      .addText((text) => {
+        text.setValue(`${settings.homeWeightLinkSuggestions}%`)
+        text.setDisabled(true)
+        text.inputEl.style.width = '60px'
+        text.inputEl.style.textAlign = 'center'
+      })
+
+    new Setting(containerEl)
+      .setName('Relevant Notes Weight')
+      .setDesc('Weight for Relevant Notes algorithm in unified recommendations (0-100%)')
+      .addSlider((slider) => {
+        slider
+          .setLimits(0, 100, 1)
+          .setValue(settings.homeWeightRelevantNotes)
+          .onChange(async (value) => {
+            settings.homeWeightRelevantNotes = value
+            await plugin.saveSettings()
+          })
+        slider.sliderEl.onmouseup = () => {
+          const total = settings.homeWeightLinkSuggestions + 
+                       settings.homeWeightRelevantNotes + 
+                       settings.homeWeightSimilarContent
+          if (total > 100) {
+            const excess = total - 100
+            const reduce = Math.min(excess / 2, settings.homeWeightLinkSuggestions, settings.homeWeightSimilarContent)
+            settings.homeWeightLinkSuggestions = Math.max(0, settings.homeWeightLinkSuggestions - reduce)
+            settings.homeWeightSimilarContent = Math.max(0, settings.homeWeightSimilarContent - (excess - reduce))
+            plugin.saveSettings()
+            this.display()
+          }
+        }
+      })
+      .addText((text) => {
+        text.setValue(`${settings.homeWeightRelevantNotes}%`)
+        text.setDisabled(true)
+        text.inputEl.style.width = '60px'
+        text.inputEl.style.textAlign = 'center'
+      })
+
+    new Setting(containerEl)
+      .setName('Similar Content Weight')
+      .setDesc('Weight for Similar Content algorithm in unified recommendations (0-100%)')
+      .addSlider((slider) => {
+        slider
+          .setLimits(0, 100, 1)
+          .setValue(settings.homeWeightSimilarContent)
+          .onChange(async (value) => {
+            settings.homeWeightSimilarContent = value
+            await plugin.saveSettings()
+          })
+        slider.sliderEl.onmouseup = () => {
+          const total = settings.homeWeightLinkSuggestions + 
+                       settings.homeWeightRelevantNotes + 
+                       settings.homeWeightSimilarContent
+          if (total > 100) {
+            const excess = total - 100
+            const reduce = Math.min(excess / 2, settings.homeWeightLinkSuggestions, settings.homeWeightRelevantNotes)
+            settings.homeWeightLinkSuggestions = Math.max(0, settings.homeWeightLinkSuggestions - reduce)
+            settings.homeWeightRelevantNotes = Math.max(0, settings.homeWeightRelevantNotes - (excess - reduce))
+            plugin.saveSettings()
+            this.display()
+          }
+        }
+      })
+      .addText((text) => {
+        text.setValue(`${settings.homeWeightSimilarContent}%`)
+        text.setDisabled(true)
+        text.inputEl.style.width = '60px'
+        text.inputEl.style.textAlign = 'center'
+      })
+
+    new Setting(containerEl)
+      .setName('Home Tab Max Results')
+      .setDesc('Maximum number of recommendations to show in the Home tab')
+      .addSlider((slider) => {
+        slider
+          .setLimits(5, 50, 1)
+          .setValue(settings.homeMaxResults)
+          .onChange(async (value) => {
+            settings.homeMaxResults = value
+            await plugin.saveSettings()
+          })
+      })
+      .addText((text) => {
+        text.setValue(`${settings.homeMaxResults}`)
+        text.setDisabled(true)
+        text.inputEl.style.width = '60px'
+        text.inputEl.style.textAlign = 'center'
+      })
+
     new Setting(containerEl)
       .setName('Exclude Infinity')
       .setDesc('Whether to exclude Infinite values by default')

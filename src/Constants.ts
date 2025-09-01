@@ -7,16 +7,21 @@ export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
   showImgThumbnails: true,
   addUnresolved: true,
   coTags: true,
-  defaultSubtypeType: 'Link Suggestions',
+  defaultSubtypeType: 'Home',
   debugMode: false,
   superDebugMode: false,
   exclusionRegex: '',
   exclusionTags: [],
   algsToShow: [
+    'Home',
     'Link Suggestions',
     'Relevant Notes', 
     'Similar Content',
   ],
+  homeWeightLinkSuggestions: 33,
+  homeWeightRelevantNotes: 33,
+  homeWeightSimilarContent: 34,
+  homeMaxResults: 15,
 }
 
 export const DECIMALS = 4
@@ -32,6 +37,13 @@ export const NODE = 'GA-node'
 export const ICON = 'GA-icon'
 
 export const ANALYSIS_TYPES: SubtypeInfo[] = [
+  {
+    anl: 'Unified Recommendations',
+    subtype: 'Home',
+    desc: 'Combined recommendations using all algorithms. Weighted average of Link Suggestions, Relevant Notes, and Similar Content with visual similarity indicators and algorithm breakdown.',
+    global: false,
+    nlp: true,
+  },
   {
     anl: 'Link Prediction',
     subtype: 'Link Suggestions',
