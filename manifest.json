@@ -1,7 +1,7 @@
 {
 	"id": "graph-analysis",
 	"name": "Graph Analysis",
-	"version": "0.15.4",
+	"version": "0.15.5",
 	"minAppVersion": "1.4.0",
 	"description": "Analyse your Obsidian graph using advanced algorithms for link prediction, similarity, and centrality.",
 	"author": "isaaclyon (fork of SkepticMystic)",
