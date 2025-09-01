@@ -95,6 +95,7 @@ export interface GraphAnalysisSettings {
   homeWeightSimilarContent: number
   homeMaxResults: number
   excludeAlreadyLinked: boolean
+  showRefreshNotice: boolean
 }
 
 

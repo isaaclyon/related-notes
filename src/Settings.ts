@@ -195,6 +195,16 @@ export class SampleSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
+      .setName('Show Index Refresh Notice')
+      .setDesc('Display a notice when the index is refreshed')
+      .addToggle((toggle) =>
+        toggle.setValue(settings.showRefreshNotice).onChange(async (value) => {
+          settings.showRefreshNotice = value
+          await plugin.saveSettings()
+        })
+      )
+
+    new Setting(containerEl)
       .setName('Include All File Extensions')
       .setDesc(
         'Whether to also show files with non-md extensions in the analyses.'

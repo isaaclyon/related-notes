@@ -150,7 +150,7 @@ export default class GraphAnalysisPlugin extends Plugin {
       this.g.invalidateCache()
       debug(this.settings, { g: this.g })
       console.timeEnd('Initialise Graph')
-      new Notice('Index Refreshed')
+      if (this.settings.showRefreshNotice) new Notice('Index Refreshed')
     } catch (error) {
       console.log(error)
       new Notice(
