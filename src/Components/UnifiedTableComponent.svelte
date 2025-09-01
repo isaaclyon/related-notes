@@ -139,11 +139,11 @@
 <table class="GA-table markdown-preview-view" bind:this={current_component}>
   <thead>
     <tr>
-      <th scope="col">Note</th>
-      <th scope="col" style="text-align: center; width: 60px;" title="Link Suggestions">Link</th>
-      <th scope="col" style="text-align: center; width: 60px;" title="Relevant Notes">Relevance</th>
-      <th scope="col" style="text-align: center; width: 60px;" title="Similar Content">Content</th>
-      <th scope="col" style="width: 80px;">Combined</th>
+      <th scope="col" style="width: 40%;">Note</th>
+      <th scope="col" style="text-align: center; width: 15%;" title="Link Suggestions">Links</th>
+      <th scope="col" style="text-align: center; width: 15%;" title="Relevant Notes">Rank</th>
+      <th scope="col" style="text-align: center; width: 15%;" title="Similar Content">Similar</th>
+      <th scope="col" style="width: 15%; text-align: center;">Score</th>
     </tr>
   </thead>
   {#if promiseSortedResults}
@@ -209,21 +209,45 @@
   .GA-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
   }
   
   .GA-table th {
     border-bottom: 1px solid var(--background-modifier-border);
-    padding: 8px;
+    padding: 10px 8px;
     text-align: left;
     font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
   }
   
   .GA-table td {
     border-bottom: 1px solid var(--background-modifier-border-focus);
-    padding: 6px 8px;
+    padding: 8px;
+    vertical-align: middle;
+  }
+  
+  .GA-table td:nth-child(2),
+  .GA-table td:nth-child(3),
+  .GA-table td:nth-child(4) {
+    text-align: center;
+    font-size: 16px;
+    padding: 8px 4px;
+  }
+  
+  .GA-table th:nth-child(2),
+  .GA-table th:nth-child(3),
+  .GA-table th:nth-child(4),
+  .GA-table th:nth-child(5) {
+    text-align: center;
   }
   
   .GA-table tr:hover {
     background-color: var(--background-modifier-hover);
+  }
+  
+  .GA-table td:last-child {
+    text-align: center;
   }
 </style>

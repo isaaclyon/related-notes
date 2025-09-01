@@ -854,6 +854,24 @@ export default class MyGraph extends Graph {
         }
       })
       
+      // Apply min-max normalization to ensure 0-1 range consistency
+      const nonZeroScores = Object.values(results)
+        .map(r => r.measure)
+        .filter(score => score > 0)
+      
+      if (nonZeroScores.length > 0) {
+        const minScore = Math.min(...nonZeroScores)
+        const maxScore = Math.max(...nonZeroScores)
+        const scoreRange = maxScore - minScore
+        
+        // Normalize scores to 0-1 range
+        for (const [node, result] of Object.entries(results)) {
+          if (result.measure > 0 && scoreRange > 0) {
+            result.measure = roundNumber((result.measure - minScore) / scoreRange)
+          }
+        }
+      }
+      
       return results
     },
 
@@ -1082,6 +1100,12 @@ export default class MyGraph extends Graph {
         iteration++
       }
       
+      // Get min and max scores for normalization (excluding the source node)
+      const scoresArray = nodes.filter(node => node !== a).map(node => currentPR[node])
+      const minScore = Math.min(...scoresArray)
+      const maxScore = Math.max(...scoresArray)
+      const scoreRange = maxScore - minScore
+      
       // Convert to ResultMap format with influence path explanations
       nodes.forEach(node => {
         if (node === a) {
@@ -1089,16 +1113,20 @@ export default class MyGraph extends Graph {
           return
         }
         
-        const score = currentPR[node]
+        const rawScore = currentPR[node]
+        
+        // Normalize to 0-1 range using min-max normalization
+        const normalizedScore = scoreRange > 0 ? (rawScore - minScore) / scoreRange : 0
+        
         const explanations: string[] = []
         
         // Add convergence info
         explanations.push(`Converged in ${iteration} iterations`)
         
-        // Add influence explanation
-        if (score > initialValue * 1.5) {
+        // Add influence explanation (based on raw score for better thresholds)
+        if (rawScore > initialValue * 1.5) {
           explanations.push('High influence from source')
-        } else if (score > initialValue) {
+        } else if (rawScore > initialValue) {
           explanations.push('Moderate influence from source')
         } else {
           explanations.push('Low influence from source')
@@ -1119,7 +1147,7 @@ export default class MyGraph extends Graph {
         }
         
         results[node] = {
-          measure: roundNumber(score),
+          measure: roundNumber(normalizedScore),
           extra: explanations
         }
       })

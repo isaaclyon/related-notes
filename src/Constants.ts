@@ -24,7 +24,7 @@ export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
   homeMaxResults: 15,
 }
 
-export const DECIMALS = 4
+export const DECIMALS = 2
 
 export const VIEW_TYPE_GRAPH_ANALYSIS = 'graph-analysis'
 

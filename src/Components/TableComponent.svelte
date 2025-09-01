@@ -205,11 +205,24 @@
 <style>
   table.GA-table {
     border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
   }
   table.GA-table,
   table.GA-table tr,
   table.GA-table td {
     border: 1px solid var(--background-modifier-border);
+  }
+
+  table.GA-table th:first-child,
+  table.GA-table td:first-child {
+    width: 70%;
+  }
+
+  table.GA-table th:last-child,
+  table.GA-table td:last-child {
+    width: 30%;
+    text-align: center;
   }
 
   table.GA-table td {
