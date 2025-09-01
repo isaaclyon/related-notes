@@ -63,11 +63,6 @@
   app.workspace.on('active-leaf-change', () => {
     if (!currSubtypeInfo?.global) {
       blockSwitch = true
-      newBatch = []
-      visibleData = []
-      promiseSortedResults = null
-      page = 0
-
       setTimeout(() => (currFile = app.workspace.getActiveFile()), 100)
     }
   })
@@ -123,6 +118,8 @@
             return filteredResults
           })
           .then((res) => {
+            page = 0
+            visibleData = []
             newBatch = res.slice(0, size)
             setTimeout(() => {
               blockSwitch = false
