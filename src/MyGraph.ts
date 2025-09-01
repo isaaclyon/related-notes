@@ -277,9 +277,9 @@ export default class MyGraph extends Graph {
         const getIndicator = (score: number, minMax: { min: number, max: number }) => {
           if (score === 0) return '—'
           const normalized = normalizeScore(score, minMax)
-          if (normalized >= 0.67) return '⬆️'
-          if (normalized >= 0.33) return '➡️'
-          return '⬇️'
+          if (normalized >= 0.67) return '🟢'
+          if (normalized >= 0.33) return '🟡'
+          return '🔴'
         }
         
         const breakdown = [
