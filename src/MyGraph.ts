@@ -164,11 +164,13 @@ export default class MyGraph extends Graph {
       this.pageRankCache.invalidate(filePath)
       this.resourceAllocationCache.invalidatePattern(`^${filePath}|:${filePath}$`)
       this.similarityCache.invalidatePattern(`^${filePath}|:${filePath}$`)
+      this.unifiedRecommendationsCache.invalidatePattern(`^${filePath}|:${filePath}$`)
     } else {
       // Clear all caches (e.g., on full graph refresh)
       this.pageRankCache.clear()
       this.resourceAllocationCache.clear()
       this.similarityCache.clear()
+      this.unifiedRecommendationsCache.clear()
     }
   }
 
