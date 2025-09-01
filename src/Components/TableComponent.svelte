@@ -38,8 +38,6 @@
   export let currSubtype: Subtype
 
   $: currSubtypeInfo = ANALYSIS_TYPES.find((sub) => sub.subtype === currSubtype) || ANALYSIS_TYPES[0]
-  let frozen = false
-  let ascOrder = false
   let { noInfinity, noZero } = settings
   let currFile = app.workspace.getActiveFile()
 
@@ -63,7 +61,7 @@
   let { resolvedLinks } = app.metadataCache
 
   app.workspace.on('active-leaf-change', () => {
-    if (!frozen && !currSubtypeInfo?.global) {
+    if (!currSubtypeInfo?.global) {
       blockSwitch = true
       newBatch = []
       visibleData = []
@@ -83,8 +81,6 @@
       ? null
       : plugin.g.algs[currSubtype](currNode)
           .then((results: ResultMap) => {
-            const greater = ascOrder ? 1 : -1
-            const lesser = ascOrder ? -1 : 1
             const componentResults: ComponentResults[] = []
 
             plugin.g.forEachNode((to) => {
@@ -112,11 +108,11 @@
             componentResults.sort((a, b) => {
               return a.measure === b.measure
                 ? a.extra?.length > b.extra?.length
-                  ? greater
-                  : lesser
+                  ? -1
+                  : 1
                 : a.measure > b.measure
-                ? greater
-                : lesser
+                ? -1
+                : 1
             })
             return componentResults
           })
@@ -137,18 +133,9 @@
 
 <SubtypeOptions
   bind:currSubtypeInfo
-  bind:noZero
-  bind:ascOrder
-  bind:currFile
-  bind:frozen
   {app}
   {plugin}
   {view}
-  bind:blockSwitch
-  bind:newBatch
-  bind:visibleData
-  bind:promiseSortedResults
-  bind:page
 />
 
 <table class="GA-table markdown-preview-view" bind:this={current_component}>
