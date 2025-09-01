@@ -21,9 +21,9 @@ export type Analyses =
   | 'Similarity'
 
 export type Subtype =
-  | 'Resource Allocation'
-  | 'Personalized PageRank'
-  | 'Otsuka-Chiai'
+  | 'Link Suggestions'
+  | 'Relevant Notes'
+  | 'Similar Content'
 
 export interface Communities {
   [group: string]: string[]

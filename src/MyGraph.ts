@@ -672,10 +672,10 @@ export default class MyGraph extends Graph {
     //   return results
     // },
 
-    'Otsuka-Chiai': async (a: string): Promise<ResultMap> => {
+    'Similar Content': async (a: string): Promise<ResultMap> => {
       const results: ResultMap = {}
       
-      // Use BM25 similarity as fallback for Otsuka-Chiai
+      // Use BM25 similarity for Similar Content
       const similarNotes = this.bm25Service.getSimilarNotes(a, 100)
       
       // Convert BM25 results to ResultMap format
@@ -708,7 +708,7 @@ export default class MyGraph extends Graph {
       return results
     },
 
-    'Resource Allocation': async (a: string): Promise<ResultMap> => {
+    'Link Suggestions': async (a: string): Promise<ResultMap> => {
       const results: ResultMap = {}
       
       // First, get BM25 similarity candidates to gate the computation
@@ -766,7 +766,7 @@ export default class MyGraph extends Graph {
       return results
     },
 
-    'Personalized PageRank': async (a: string): Promise<ResultMap> => {
+    'Relevant Notes': async (a: string): Promise<ResultMap> => {
       const results: ResultMap = {}
       const alpha = 0.15 // Restart probability
       const epsilon = 1e-6 // Convergence threshold

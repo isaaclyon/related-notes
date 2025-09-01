@@ -23,11 +23,11 @@
 
 <ScrollSelector bind:currSubtype {view} />
 
-{#if currSubtype === 'Resource Allocation'}
+{#if currSubtype === 'Link Suggestions'}
   <TableComponent {...props} />
-{:else if currSubtype === 'Personalized PageRank'}
+{:else if currSubtype === 'Relevant Notes'}
   <TableComponent {...props} />
-{:else if currSubtype === 'Otsuka-Chiai'}
+{:else if currSubtype === 'Similar Content'}
   <TableComponent {...props} />
 {:else}
   <!-- Fallback for any undefined algorithms -->

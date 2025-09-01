@@ -143,7 +143,7 @@
     aria-label="Refresh Index"
     on:click={async () => {
       await plugin.refreshGraph()
-      await view.draw(currSubtypeInfo?.subtype || 'Resource Allocation')
+      await view.draw(currSubtypeInfo?.subtype || 'Link Suggestions')
     }}
   >
     <span class="icon">

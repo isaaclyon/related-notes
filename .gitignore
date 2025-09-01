@@ -85,3 +85,6 @@ temp/
 # Obsidian plugin specific
 main.js
 *.js.map
+
+# Local deployment scripts (contains personal paths)
+deploy.sh

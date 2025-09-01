@@ -7,15 +7,15 @@ export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
   showImgThumbnails: true,
   addUnresolved: true,
   coTags: true,
-  defaultSubtypeType: 'Resource Allocation',
+  defaultSubtypeType: 'Link Suggestions',
   debugMode: false,
   superDebugMode: false,
   exclusionRegex: '',
   exclusionTags: [],
   algsToShow: [
-    'Resource Allocation',
-    'Personalized PageRank', 
-    'Otsuka-Chiai',
+    'Link Suggestions',
+    'Relevant Notes', 
+    'Similar Content',
   ],
 }
 
@@ -34,22 +34,22 @@ export const ICON = 'GA-icon'
 export const ANALYSIS_TYPES: SubtypeInfo[] = [
   {
     anl: 'Link Prediction',
-    subtype: 'Resource Allocation',
-    desc: 'What should this note be linked to? Predicts which notes should be linked based on shared neighbors weighted by their degree. Higher scores indicate stronger link recommendations.',
+    subtype: 'Link Suggestions',
+    desc: 'What should this note be linked to? Predicts which notes should be linked based on shared neighbors weighted by their degree using Resource Allocation algorithm. Higher scores indicate stronger link recommendations.',
     global: false,
     nlp: false,
   },
   {
     anl: 'Centrality',
-    subtype: 'Personalized PageRank',
-    desc: 'What else is worth attention? Personalized influence ranking starting from the current note. Uses power iteration with folder/tag boosts and time decay for recent modifications.',
+    subtype: 'Relevant Notes',
+    desc: 'What else is worth attention? Personalized influence ranking starting from the current note using Personalized PageRank. Uses power iteration with folder/tag boosts and time decay for recent modifications.',
     global: false,
     nlp: false,
   },
   {
     anl: 'Similarity',
-    subtype: 'Otsuka-Chiai',
-    desc: 'Most similar notes. Uses advanced BM25F text similarity with field-weighted scoring (title boosted 2x) to find content-similar notes.',
+    subtype: 'Similar Content',
+    desc: 'Most similar notes. Uses advanced BM25F text similarity with field-weighted scoring (title boosted 2x) via Otsuka-Chiai algorithm to find content-similar notes.',
     global: false,
     nlp: true,
   },
