@@ -22,6 +22,7 @@ export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
   homeWeightRelevantNotes: 33,
   homeWeightSimilarContent: 34,
   homeMaxResults: 15,
+  excludeAlreadyLinked: false,
 }
 
 export const DECIMALS = 2

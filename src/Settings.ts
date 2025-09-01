@@ -185,6 +185,16 @@ export class SampleSettingTab extends PluginSettingTab {
       )
 
     new Setting(containerEl)
+      .setName('Exclude Already Linked Notes')
+      .setDesc('Hide notes that are already linked to/from the current note. Useful for discovering new connections.')
+      .addToggle((toggle) =>
+        toggle.setValue(settings.excludeAlreadyLinked).onChange(async (value) => {
+          settings.excludeAlreadyLinked = value
+          await plugin.saveSettings()
+        })
+      )
+
+    new Setting(containerEl)
       .setName('Include All File Extensions')
       .setDesc(
         'Whether to also show files with non-md extensions in the analyses.'

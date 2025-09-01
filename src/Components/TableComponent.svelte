@@ -105,7 +105,13 @@
                 })
               }
             })
-            componentResults.sort((a, b) => {
+
+            // Filter out already linked notes if setting is enabled
+            const filteredResults = settings.excludeAlreadyLinked 
+              ? componentResults.filter(result => !result.linked)
+              : componentResults
+
+            filteredResults.sort((a, b) => {
               return a.measure === b.measure
                 ? a.extra?.length > b.extra?.length
                   ? -1
@@ -114,7 +120,7 @@
                 ? -1
                 : 1
             })
-            return componentResults
+            return filteredResults
           })
           .then((res) => {
             newBatch = res.slice(0, size)
