@@ -29,17 +29,28 @@ import type {
 } from './Interfaces'
 import { addPreCocitation, findSentence, getCounts, getMaxKey, roundNumber, sum } from './Utility'
 import { BM25Service, type ScoredResult, type BM25Options } from './index/BM25Service'
+import { LRUCache } from './LRUCache'
 
 export default class MyGraph extends Graph {
   app: App
   settings: GraphAnalysisSettings
   bm25Service: BM25Service
+  
+  // LRU caches for expensive operations
+  private pageRankCache: LRUCache<ResultMap>
+  private resourceAllocationCache: LRUCache<ResultMap>
+  private similarityCache: LRUCache<ResultMap>
 
   constructor(app: App, settings: GraphAnalysisSettings) {
     super()
     this.app = app
     this.settings = settings
     this.bm25Service = new BM25Service()
+    
+    // Initialize LRU caches
+    this.pageRankCache = new LRUCache<ResultMap>(50, 15) // 50 entries, 15 min TTL
+    this.resourceAllocationCache = new LRUCache<ResultMap>(200, 30) // 200 entries, 30 min TTL  
+    this.similarityCache = new LRUCache<ResultMap>(100, 20) // 100 entries, 20 min TTL
   }
 
   async initGraph(): Promise<MyGraph> {
@@ -142,6 +153,29 @@ export default class MyGraph extends Graph {
       }
     }
     return this
+  }
+
+  // Cache management methods
+  invalidateCache(filePath?: string) {
+    if (filePath) {
+      // Invalidate caches related to specific file
+      this.pageRankCache.invalidate(filePath)
+      this.resourceAllocationCache.invalidatePattern(`^${filePath}|:${filePath}$`)
+      this.similarityCache.invalidatePattern(`^${filePath}|:${filePath}$`)
+    } else {
+      // Clear all caches (e.g., on full graph refresh)
+      this.pageRankCache.clear()
+      this.resourceAllocationCache.clear()
+      this.similarityCache.clear()
+    }
+  }
+
+  getCacheStats() {
+    return {
+      pageRank: this.pageRankCache.getStats(),
+      resourceAllocation: this.resourceAllocationCache.getStats(),
+      similarity: this.similarityCache.getStats()
+    }
   }
 
   algs: {
@@ -709,6 +743,12 @@ export default class MyGraph extends Graph {
     },
 
     'Link Suggestions': async (a: string): Promise<ResultMap> => {
+      // Check cache first
+      const cached = this.resourceAllocationCache.get(a)
+      if (cached) {
+        return cached
+      }
+
       const results: ResultMap = {}
       
       // First, get BM25 similarity candidates to gate the computation
@@ -763,10 +803,19 @@ export default class MyGraph extends Graph {
         }
       })
       
+      // Cache the results before returning
+      this.resourceAllocationCache.set(a, results)
+      
       return results
     },
 
     'Relevant Notes': async (a: string): Promise<ResultMap> => {
+      // Check cache first
+      const cached = this.pageRankCache.get(a)
+      if (cached) {
+        return cached
+      }
+
       const results: ResultMap = {}
       const alpha = 0.15 // Restart probability
       const epsilon = 1e-6 // Convergence threshold
@@ -947,6 +996,9 @@ export default class MyGraph extends Graph {
           extra: explanations
         }
       })
+      
+      // Cache the results before returning
+      this.pageRankCache.set(a, results)
       
       return results
     },

@@ -15,6 +15,9 @@ import { debug } from './Utility'
 export default class GraphAnalysisPlugin extends Plugin {
   settings: GraphAnalysisSettings
   g: MyGraph
+  private updateQueue: Set<string> = new Set()
+  private updateTimeout: NodeJS.Timeout | null = null
+  private readonly UPDATE_DEBOUNCE_MS = 300
 
   async onload() {
     console.log('loading graph analysis plugin')
@@ -68,6 +71,49 @@ export default class GraphAnalysisPlugin extends Plugin {
       (leaf: WorkspaceLeaf) => new AnalysisView(leaf, this, null)
     )
 
+    // Register vault event handlers for real-time updates
+    this.registerEvent(
+      this.app.vault.on('modify', (file) => {
+        if (file.extension === 'md') {
+          this.queueFileUpdate(file.path)
+        }
+      })
+    )
+
+    this.registerEvent(
+      this.app.vault.on('create', (file) => {
+        if (file.extension === 'md') {
+          this.queueFileUpdate(file.path)
+        }
+      })
+    )
+
+    this.registerEvent(
+      this.app.vault.on('delete', (file) => {
+        if (file.extension === 'md') {
+          this.queueFileUpdate(file.path)
+        }
+      })
+    )
+
+    this.registerEvent(
+      this.app.vault.on('rename', (file, oldPath) => {
+        if (file.extension === 'md') {
+          // Handle rename by updating both old and new paths
+          this.queueFileUpdate(oldPath)
+          this.queueFileUpdate(file.path)
+        }
+      })
+    )
+
+    this.registerEvent(
+      this.app.metadataCache.on('resolved', (file) => {
+        if (file.extension === 'md') {
+          this.queueFileUpdate(file.path)
+        }
+      })
+    )
+
     this.app.workspace.onLayoutReady(async () => {
       const noFiles = this.app.vault.getMarkdownFiles().length
       while (!this.resolvedLinksComplete(noFiles)) {
@@ -100,7 +146,8 @@ export default class GraphAnalysisPlugin extends Plugin {
       console.time('Initialise Graph')
       this.g = new MyGraph(this.app, this.settings)
       await this.g.initGraph()
-      // await this.g.initData()
+      // Clear all caches after full graph refresh
+      this.g.invalidateCache()
       debug(this.settings, { g: this.g })
       console.timeEnd('Initialise Graph')
       new Notice('Index Refreshed')
@@ -112,8 +159,148 @@ export default class GraphAnalysisPlugin extends Plugin {
     }
   }
 
+  private queueFileUpdate(filePath: string) {
+    // Add file to update queue
+    this.updateQueue.add(filePath)
+    
+    // Clear existing timeout
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout)
+    }
+    
+    // Set new debounced timeout
+    this.updateTimeout = setTimeout(() => {
+      this.processQueuedUpdates()
+    }, this.UPDATE_DEBOUNCE_MS)
+  }
+
+  private async processQueuedUpdates() {
+    if (!this.g || this.updateQueue.size === 0) {
+      return
+    }
+
+    const filesToUpdate = Array.from(this.updateQueue)
+    this.updateQueue.clear()
+    this.updateTimeout = null
+
+    try {
+      console.log(`Processing ${filesToUpdate.length} queued file updates`)
+      
+      for (const filePath of filesToUpdate) {
+        await this.updateFileIncrementally(filePath)
+        // Invalidate caches for updated files
+        this.g.invalidateCache(filePath)
+      }
+      
+      // Refresh the current view if it's open
+      const currentView = await this.getCurrentView(false)
+      if (currentView) {
+        await currentView.draw(currentView.currSubtype)
+      }
+      
+      debug(this.settings, `Updated ${filesToUpdate.length} files incrementally`)
+    } catch (error) {
+      console.error('Error processing queued updates:', error)
+      // Fallback to full refresh on error
+      await this.refreshGraph()
+    }
+  }
+
+  private async updateFileIncrementally(filePath: string) {
+    if (!this.g) return
+
+    const file = this.app.vault.getAbstractFileByPath(filePath)
+    const { exclusionRegex, exclusionTags, allFileExtensions } = this.settings
+    const regex = new RegExp(exclusionRegex, 'i')
+
+    // Check if file should be included based on settings
+    const includeRegex = (path: string) => exclusionRegex === '' || !regex.test(path)
+    const includeExt = (path: string) => allFileExtensions || path.endsWith('md')
+    const includeTag = (tags: any[] | undefined) =>
+      exclusionTags.length === 0 ||
+      !tags ||
+      tags.findIndex((t) => exclusionTags.includes(t.tag)) === -1
+
+    if (file && 'extension' in file && file.extension === 'md') {
+      // File exists - update or add
+      if (includeRegex(filePath) && includeExt(filePath)) {
+        const cache = this.app.metadataCache.getCache(filePath)
+        const tags = cache?.tags
+        
+        if (includeTag(tags)) {
+          try {
+            // Update BM25 index
+            const content = await this.app.vault.cachedRead(file)
+            const title = cache?.frontmatter?.title || file.basename || 'Untitled'
+            this.g.bm25Service.indexDocument(filePath, title, content)
+            
+            // Update graph structure (basic - could be optimized further)
+            await this.updateGraphStructure(filePath)
+            
+            debug(this.settings, `Updated file incrementally: ${filePath}`)
+          } catch (error) {
+            console.warn(`Failed to update file ${filePath}:`, error)
+          }
+        }
+      }
+    } else {
+      // File doesn't exist or was deleted - remove from index
+      this.g.bm25Service.removeDocument(filePath)
+      if (this.g.hasNode(filePath)) {
+        this.g.dropNode(filePath)
+      }
+      debug(this.settings, `Removed file from index: ${filePath}`)
+    }
+  }
+
+  private async updateGraphStructure(filePath: string) {
+    // This is a simplified approach - for full optimization, we would
+    // need more sophisticated graph edge management
+    const { resolvedLinks } = this.app.metadataCache
+    
+    // Remove existing edges for this node
+    if (this.g.hasNode(filePath)) {
+      const neighbors = this.g.neighbors(filePath)
+      neighbors.forEach(neighbor => {
+        if (this.g.hasEdge(filePath, neighbor)) {
+          this.g.dropEdge(filePath, neighbor)
+        }
+        if (this.g.hasEdge(neighbor, filePath)) {
+          this.g.dropEdge(neighbor, filePath)
+        }
+      })
+    } else {
+      // Add node if it doesn't exist
+      const nodeCount = this.g.nodes().length
+      this.g.addNode(filePath, { i: nodeCount })
+    }
+    
+    // Add current edges
+    if (resolvedLinks[filePath]) {
+      for (const dest in resolvedLinks[filePath]) {
+        if (this.g.hasNode(dest)) {
+          this.g.addEdge(filePath, dest, { resolved: true })
+        }
+      }
+    }
+    
+    // Also update incoming edges
+    for (const source in resolvedLinks) {
+      if (resolvedLinks[source][filePath] && this.g.hasNode(source)) {
+        this.g.addEdge(source, filePath, { resolved: true })
+      }
+    }
+  }
+
   onunload() {
     console.log('unloading graph analysis plugin')
+    
+    // Clean up timeout
+    if (this.updateTimeout) {
+      clearTimeout(this.updateTimeout)
+      this.updateTimeout = null
+    }
+    
     this.app.workspace
       .getLeavesOfType(VIEW_TYPE_GRAPH_ANALYSIS)
       .forEach((leaf) => {
