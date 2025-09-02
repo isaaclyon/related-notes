@@ -9,7 +9,10 @@
       "Bash(git push:*)",
       "Bash(chmod:*)",
       "Bash(./deploy.sh)",
-      "Bash(git log:*)"
+      "Bash(git log:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []
