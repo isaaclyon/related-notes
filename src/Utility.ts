@@ -38,14 +38,61 @@ export function debug<T>(settings: GraphAnalysisSettings, log: T): void {
   }
 }
 
-export function superDebug<T>(settings: GraphAnalysisSettings, log: T): void {
-  if (settings.superDebugMode) {
-    console.log(log)
-  }
-}
 
 export function roundNumber(num: number, dec: number = DECIMALS): number {
   return Math.round(num * Math.pow(10, dec)) / Math.pow(10, dec)
+}
+
+
+
+
+
+
+
+
+
+/**
+ * Adds or updates the given yaml `key` to `value` in the given TFile
+ * @param  {string} key
+ * @param  {string} value
+ * @param  {TFile} file
+ * @param  {App} app
+ */
+
+
+
+
+
+export function getCounts(arr: any[]) {
+  const counts: { [item: string]: number } = {}
+  for (const num of arr) {
+    counts[num] = counts[num] ? counts[num] + 1 : 1
+  }
+  return counts
+}
+
+export function getMaxKey(obj: Record<string, number>) {
+  // Using random resolving of equality
+  return Object.keys(obj).reduce((a, b) =>
+    obj[a] === obj[b] ? (Math.random() < 0.5 ? a : b) : obj[a] > obj[b] ? a : b
+  )
+}
+
+
+
+export function findSentence(sentences: [string], link: CacheItem): [number, number, number] {
+  let aggrSentenceLength = 0
+  let count = 0
+  for (const sentence of sentences) {
+    const nextLength = aggrSentenceLength + sentence.length
+    // Edge case that does not work: If alias has end of sentences.
+    if (link.position.end.col <= nextLength) {
+      return [count, aggrSentenceLength, nextLength]
+    }
+    aggrSentenceLength = nextLength
+    count += 1
+  }
+  return [-1, 0, aggrSentenceLength]
 }
 
 export const dropPath = (path: string) => {
@@ -57,89 +104,15 @@ export const dropExt = (path: string) =>
 export const getExt = (path: string) => path.split('.').last()
 
 export const classExt = (path: string) => `GA-${getExt(path)}`
-export const classResolved = (app: App, node: string) =>
-  node.endsWith('.md') && !isInVault(app, dropExt(node)) ? 'is-unresolved' : ''
-export const classLinked = (
-  resolvedLinks: ResolvedLinks,
-  from: string,
-  to: string,
-  directed = false
-) => (isLinked(resolvedLinks, from, to, directed) ? LINKED : NOT_LINKED)
 
 export const presentPath = (path: string) => dropExt(dropPath(path))
 
-export const nxnArray = (n: number): undefined[][] =>
-  [...Array(n)].map((e) => Array(n))
+export const isImg = (path: string) =>
+  IMG_EXTENSIONS.includes(path.split('.').last())
 
-export function hoverPreview(
-  event: MouseEvent,
-  view: AnalysisView,
-  to: string
-): void {
-  const targetEl = event.target as HTMLElement
-
-  view.app.workspace.trigger('hover-link', {
-    event,
-    source: view.getViewType(),
-    hoverParent: view,
-    targetEl,
-    linktext: to,
-  })
-}
-
-export function looserIsLinked(
-  app: App,
-  from: string,
-  to: string,
-  directed: boolean = true
-) {
-  const { resolvedLinks, unresolvedLinks } = app.metadataCache
-  const fromTo =
-    resolvedLinks[from]?.hasOwnProperty(to) ||
-    unresolvedLinks[from]?.hasOwnProperty(dropExt(to))
-  if (!fromTo && !directed) {
-    return (
-      resolvedLinks[to]?.hasOwnProperty(from) ||
-      unresolvedLinks[to]?.hasOwnProperty(dropExt(from))
-    )
-  } else return fromTo
-}
-
-export function isUnresolved(app: App, from: string, to: string) {
-  return app.metadataCache.unresolvedLinks[from]?.hasOwnProperty(to)
-}
-
-/**
- * Adds or updates the given yaml `key` to `value` in the given TFile
- * @param  {string} key
- * @param  {string} value
- * @param  {TFile} file
- * @param  {App} app
- */
-export const createOrUpdateYaml = async (
-  key: string,
-  value: string,
-  file: TFile,
-  app: App
-) => {
-  // @ts-ignore
-  const api = app.plugins.plugins.metaedit?.api
-
-  if (!api) {
-    new Notice('Metaedit must be enabled for this function to work')
-    return
-  }
-  let valueStr = value.toString()
-  const frontmatter = app.metadataCache.getFileCache(file)?.frontmatter
-  if (!frontmatter || frontmatter[key] === undefined) {
-    await api.createYamlProperty(key, `['${valueStr}']`, file)
-  } else if ([...[frontmatter[key]]].flat(3).some((val) => val == valueStr)) {
-    return
-  } else {
-    const oldValueFlat: string[] = [...[frontmatter[key]]].flat(4)
-    const newValue = [...oldValueFlat, valueStr].map((val) => `'${val}'`)
-    await api.update(key, `[${newValue.join(', ')}]`, file)
-  }
+export function getImgBufferPromise(app: App, fileName: string) {
+  const file = app.metadataCache.getFirstLinkpathDest(fileName, '')
+  return file ? app.vault.readBinary(file) : null
 }
 
 export function openMenu(
@@ -169,9 +142,8 @@ export function openMenu(
             const currFile = app.workspace.getActiveFile()
             // @ts-ignore
             const targetStr = tdEl.innerText
-            createOrUpdateYaml('key', targetStr, currFile, app)
-
-            new Notice('Write Successful')
+            // Note: createOrUpdateYaml was removed - this functionality is disabled
+            new Notice('YAML functionality disabled')
           } catch (error) {
             new Notice('Write failed')
           }
@@ -196,127 +168,14 @@ export function openMenu(
             new Notice(`${targetStr} does not exist in your vault yet`)
             return
           } else {
-            createOrUpdateYaml('key', currStr, targetFile, app)
+            // Note: createOrUpdateYaml was removed - this functionality is disabled
+            new Notice('YAML functionality disabled')
           }
         })
     )
   }
   menu.showAtMouseEvent(event)
 }
-
-export function jumpToSelection(app: App, line: number, sentence: string) {
-  const view = app.workspace.getActiveViewOfType(MarkdownView)
-  // Make sure the user is editing a Markdown file.
-  if (view && view.getMode() === 'source') {
-    const { editor } = view
-
-    // Creat sel
-    const lineStartPos = { ch: 0, line }
-    const markStart = editor.posToOffset(lineStartPos)
-
-    // const lineStr = editor.getLine(line)
-    // let startOfSentenceInLine = 0
-    // if (lineStr !== sentence) {
-    //   startOfSentenceInLine = lineStr.indexOf(sentence)
-    // }
-
-    // if (startOfSentenceInLine === -1) {
-    //   console.log('sentence not in lineStr')
-    //   return
-    // }
-
-    const markEnd = markStart + sentence.length
-
-    const markSel: EditorRange = {
-      from: editor.offsetToPos(markStart),
-      to: editor.offsetToPos(markEnd),
-    }
-
-    editor.setSelection(markSel.from, markSel.to)
-    editor.scrollIntoView(markSel)
-
-    const doc = editor.cm.getDoc()
-    const marker = doc.markText(markSel.from, markSel.to, {
-      className: 'GA-highlight-sentence',
-    })
-
-    setTimeout(() => {
-      marker.clear()
-    }, 1000)
-  } else if (view && view.getMode() === 'preview') {
-    // Handle preview mode
-  }
-}
-
-export function getImgBufferPromise(app: App, fileName: string) {
-  const file = app.metadataCache.getFirstLinkpathDest(fileName, '')
-  return file ? app.vault.readBinary(file) : null
-}
-
-export function getPromiseResults(
-  app: App,
-  plugin: GraphAnalysisPlugin,
-  currNode: string,
-  subtype: Subtype,
-  resolvedLinks: ResolvedLinks,
-  ascOrder = false
-): Promise<ComponentResults[]> {
-  if (!plugin.g || !currNode) return null
-
-  const greater = ascOrder ? 1 : -1
-  const lesser = ascOrder ? -1 : 1
-  const resultsPromise = plugin.g.algs[subtype](currNode).then(
-    (results: ResultMap) =>
-      plugin.g
-        .nodes()
-        .map((to) => {
-          const { measure, extra } = results[to] as {
-            measure: number
-            extra: any
-          }
-          const resolved = !to.endsWith('.md') || isInVault(app, to)
-          return {
-            measure,
-            linked: isLinked(resolvedLinks, currNode, to, false),
-            to,
-            resolved,
-            extra,
-            img:
-              plugin.settings.showImgThumbnails && isImg(to)
-                ? getImgBufferPromise(app, to)
-                : null,
-          }
-        })
-        .sort((a, b) => {
-          return a.measure === b.measure
-            ? a.extra?.length > b.extra?.length
-              ? greater
-              : lesser
-            : a.measure > b.measure
-            ? greater
-            : lesser
-        })
-  )
-  return resultsPromise
-}
-
-export function getCounts(arr: any[]) {
-  const counts: { [item: string]: number } = {}
-  for (const num of arr) {
-    counts[num] = counts[num] ? counts[num] + 1 : 1
-  }
-  return counts
-}
-
-export function getMaxKey(obj: Record<string, number>) {
-  // Using random resolving of equality
-  return Object.keys(obj).reduce((a, b) =>
-    obj[a] === obj[b] ? (Math.random() < 0.5 ? a : b) : obj[a] > obj[b] ? a : b
-  )
-}
-
-export const isImg = (path: string) =>
-  IMG_EXTENSIONS.includes(path.split('.').last())
 
 export async function openOrSwitch(
   app: App,
@@ -359,19 +218,37 @@ export async function openOrSwitch(
   }
 }
 
-export function findSentence(sentences: [string], link: CacheItem): [number, number, number] {
-  let aggrSentenceLength = 0
-  let count = 0
-  for (const sentence of sentences) {
-    const nextLength = aggrSentenceLength + sentence.length
-    // Edge case that does not work: If alias has end of sentences.
-    if (link.position.end.col <= nextLength) {
-      return [count, aggrSentenceLength, nextLength]
+export function jumpToSelection(app: App, line: number, sentence: string) {
+  const view = app.workspace.getActiveViewOfType(MarkdownView)
+  // Make sure the user is editing a Markdown file.
+  if (view && view.getMode() === 'source') {
+    const { editor } = view
+
+    // Creat sel
+    const lineStartPos = { ch: 0, line }
+    const markStart = editor.posToOffset(lineStartPos)
+
+    const markEnd = markStart + sentence.length
+
+    const markSel: EditorRange = {
+      from: editor.offsetToPos(markStart),
+      to: editor.offsetToPos(markEnd),
     }
-    aggrSentenceLength = nextLength
-    count += 1
+
+    editor.setSelection(markSel.from, markSel.to)
+    editor.scrollIntoView(markSel)
+
+    const doc = editor.cm.getDoc()
+    const marker = doc.markText(markSel.from, markSel.to, {
+      className: 'GA-highlight-sentence',
+    })
+
+    setTimeout(() => {
+      marker.clear()
+    }, 1000)
+  } else if (view && view.getMode() === 'preview') {
+    // Handle preview mode
   }
-  return [-1, 0, aggrSentenceLength]
 }
 
 export function addPreCocitation(preCocitations: { [name: string]: [number, CoCitation[]] },
