@@ -15,6 +15,7 @@ import { debug } from './Utility'
 export default class GraphAnalysisPlugin extends Plugin {
   settings: GraphAnalysisSettings
   g: MyGraph
+  refreshCounter: number = 0
   private updateQueue: Set<string> = new Set()
   private updateTimeout: NodeJS.Timeout | null = null
   private readonly UPDATE_DEBOUNCE_MS = 300
@@ -74,7 +75,7 @@ export default class GraphAnalysisPlugin extends Plugin {
     // Register vault event handlers for real-time updates
     this.registerEvent(
       this.app.vault.on('modify', (file) => {
-        if (file.extension === 'md') {
+        if (file && 'extension' in file && file.extension === 'md') {
           this.queueFileUpdate(file.path)
         }
       })
@@ -82,7 +83,7 @@ export default class GraphAnalysisPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on('create', (file) => {
-        if (file.extension === 'md') {
+        if (file && 'extension' in file && file.extension === 'md') {
           this.queueFileUpdate(file.path)
         }
       })
@@ -90,7 +91,7 @@ export default class GraphAnalysisPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on('delete', (file) => {
-        if (file.extension === 'md') {
+        if (file && 'extension' in file && file.extension === 'md') {
           this.queueFileUpdate(file.path)
         }
       })
@@ -98,7 +99,7 @@ export default class GraphAnalysisPlugin extends Plugin {
 
     this.registerEvent(
       this.app.vault.on('rename', (file, oldPath) => {
-        if (file.extension === 'md') {
+        if (file && 'extension' in file && file.extension === 'md') {
           // Handle rename by updating both old and new paths
           this.queueFileUpdate(oldPath)
           this.queueFileUpdate(file.path)
@@ -108,7 +109,7 @@ export default class GraphAnalysisPlugin extends Plugin {
 
     this.registerEvent(
       this.app.metadataCache.on('resolved', (file) => {
-        if (file.extension === 'md') {
+        if (file && 'extension' in file && file.extension === 'md') {
           this.queueFileUpdate(file.path)
         }
       })
@@ -187,16 +188,20 @@ export default class GraphAnalysisPlugin extends Plugin {
       console.log(`Processing ${filesToUpdate.length} queued file updates`)
       
       for (const filePath of filesToUpdate) {
-        await this.updateFileIncrementally(filePath)
-        // Invalidate caches for updated files
-        this.g.invalidateCache(filePath)
+        try {
+          await this.updateFileIncrementally(filePath)
+          // Invalidate caches for updated files
+          this.g.invalidateCache(filePath)
+        } catch (error) {
+          console.error(`Error updating file ${filePath}:`, error)
+          // Continue processing other files
+        }
       }
       
-      // Refresh the current view if it's open
-      const currentView = await this.getCurrentView(false)
-      if (currentView) {
-        await currentView.draw(currentView.currSubtype)
-      }
+      // Increment refresh counter to trigger Svelte reactivity
+      this.refreshCounter++
+      
+      // Note: No need to call draw() - let Svelte components react to refreshCounter change
       
       debug(this.settings, `Updated ${filesToUpdate.length} files incrementally`)
     } catch (error) {
@@ -210,6 +215,16 @@ export default class GraphAnalysisPlugin extends Plugin {
     if (!this.g) return
 
     const file = this.app.vault.getAbstractFileByPath(filePath)
+    
+    // Handle case where file no longer exists (deleted)
+    if (!file) {
+      // Remove from graph if it exists
+      if (this.g.hasNode(filePath)) {
+        this.g.dropNode(filePath)
+      }
+      return
+    }
+
     const { exclusionRegex, exclusionTags, allFileExtensions } = this.settings
     const regex = new RegExp(exclusionRegex, 'i')
 
@@ -221,7 +236,7 @@ export default class GraphAnalysisPlugin extends Plugin {
       !tags ||
       tags.findIndex((t) => exclusionTags.includes(t.tag)) === -1
 
-    if (file && 'extension' in file && file.extension === 'md') {
+    if ('extension' in file && file.extension === 'md') {
       // File exists - update or add
       if (includeRegex(filePath) && includeExt(filePath)) {
         const cache = this.app.metadataCache.getCache(filePath)

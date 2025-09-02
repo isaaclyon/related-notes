@@ -71,15 +71,36 @@
     currNode = currFile?.path
   })
 
+  // Check if current file should be excluded from analysis
+  function shouldExcludeFile(filePath: string): boolean {
+    if (!filePath) return true
+    
+    const { exclusionRegex, exclusionTags, allFileExtensions } = settings
+    const regex = new RegExp(exclusionRegex, 'i')
+    
+    const includeRegex = exclusionRegex === '' || !regex.test(filePath)
+    const includeExt = allFileExtensions || filePath.endsWith('md')
+    
+    return !includeRegex || !includeExt
+  }
+
   $: promiseSortedResults =
-    !plugin.g || !currNode
+    !plugin.g || !currNode || !plugin.g.algs || !plugin.g.algs[currSubtype] || shouldExcludeFile(currNode)
       ? null
-      : plugin.g.algs[currSubtype](currNode)
+      : (plugin.refreshCounter, plugin.g.algs[currSubtype](currNode))
           .then((results: ResultMap) => {
             const componentResults: ComponentResults[] = []
 
+            if (!results) {
+              console.warn(`Algorithm ${currSubtype} returned null results for ${currNode}`)
+              return componentResults
+            }
+
             plugin.g.forEachNode((to) => {
-              const { measure, extra } = (results as ResultMap)[to]
+              const result = (results as ResultMap)[to]
+              if (!result) return
+              
+              const { measure, extra } = result
               if (
                 !(noInfinity && measure === Infinity) &&
                 !(noZero && measure === 0)
@@ -125,6 +146,10 @@
               blockSwitch = false
             }, 100)
             return res
+          })
+          .catch((error) => {
+            console.error(`Error in ${currSubtype} algorithm for ${currNode}:`, error)
+            return []
           })
 
   $: visibleData = [...visibleData, ...newBatch]
