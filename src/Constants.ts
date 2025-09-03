@@ -28,7 +28,7 @@ export const DEFAULT_SETTINGS: GraphAnalysisSettings = {
 
 export const DECIMALS = 2
 
-export const VIEW_TYPE_GRAPH_ANALYSIS = 'graph-analysis'
+export const VIEW_TYPE_RELATED_NOTES = 'related-notes'
 
 export const LINKED = 'GA-linked'
 export const NOT_LINKED = 'GA-not-linked'

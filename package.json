@@ -1,5 +1,5 @@
 {
-  "name": "graph-analysis",
+  "name": "related-notes",
   "version": "0.15.5",
   "description": "Analyse your Obsidian graph",
   "main": "main.js",

@@ -314,7 +314,7 @@ export class SampleSettingTab extends PluginSettingTab {
     new Setting(containerEl)
       .setName('Debug Mode')
       .setDesc(
-        'Toggling this on will enable a few console logs to appear when using the graph analysis view.'
+        'Toggling this on will enable a few console logs to appear when using the related notes view.'
       )
       .addToggle((toggle) =>
         toggle.setValue(settings.debugMode).onChange(async (value) => {

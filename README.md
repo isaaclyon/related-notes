@@ -48,10 +48,10 @@ Related Notes is an Obsidian plugin that analyzes a vault to surface relationshi
 ## How it works
 
 1. **Content analysis**: Indexes text with BM25F for similarity.
-2. **Graph analysis**: Applies Resource Allocation and PageRank to the note graph.
+2. **Network analysis**: Applies Resource Allocation and PageRank to the note graph.
 3. **Context ranking**: Adjusts results based on the current note.
 
-Algorithms combine for efficiency. Example: Link suggestions use text similarity to narrow candidates before applying graph analysis.
+Algorithms combine for efficiency. Example: Link suggestions use text similarity to narrow candidates before applying network analysis.
 
 ## Advanced features
 

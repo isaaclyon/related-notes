@@ -5,7 +5,7 @@ import {
   ANALYSIS_TYPES,
   DEFAULT_SETTINGS,
   iconSVG,
-  VIEW_TYPE_GRAPH_ANALYSIS,
+  VIEW_TYPE_RELATED_NOTES,
 } from './Constants'
 import type { GraphAnalysisSettings } from './Interfaces'
 import MyGraph from './MyGraph'
@@ -21,23 +21,23 @@ export default class GraphAnalysisPlugin extends Plugin {
   private readonly UPDATE_DEBOUNCE_MS = 300
 
   async onload() {
-    console.log('loading graph analysis plugin')
+    console.log('loading related notes plugin')
 
     await this.loadSettings()
     addIcon('GA-ICON', iconSVG)
 
     this.addCommand({
-      id: 'show-graph-analysis-view',
+      id: 'show-related-notes-view',
       name: 'Open Related Notes View',
       checkCallback: (checking: boolean) => {
         let checkResult =
-          this.app.workspace.getLeavesOfType(VIEW_TYPE_GRAPH_ANALYSIS)
+          this.app.workspace.getLeavesOfType(VIEW_TYPE_RELATED_NOTES)
             .length === 0
 
         if (checkResult) {
           // Only perform work when checking is false
           if (!checking) {
-            openView(this.app, VIEW_TYPE_GRAPH_ANALYSIS, AnalysisView)
+            openView(this.app, VIEW_TYPE_RELATED_NOTES, AnalysisView)
           }
           return true
         }
@@ -68,7 +68,7 @@ export default class GraphAnalysisPlugin extends Plugin {
     this.addSettingTab(new SampleSettingTab(this.app, this))
 
     this.registerView(
-      VIEW_TYPE_GRAPH_ANALYSIS,
+      VIEW_TYPE_RELATED_NOTES,
       (leaf: WorkspaceLeaf) => new AnalysisView(leaf, this, null)
     )
 
@@ -122,7 +122,7 @@ export default class GraphAnalysisPlugin extends Plugin {
       }
 
       await this.refreshGraph()
-      await openView(this.app, VIEW_TYPE_GRAPH_ANALYSIS, AnalysisView)
+      await openView(this.app, VIEW_TYPE_RELATED_NOTES, AnalysisView)
     })
   }
 
@@ -133,12 +133,12 @@ export default class GraphAnalysisPlugin extends Plugin {
 
   getCurrentView = async (openIfNot = true) => {
     const view = this.app.workspace.getLeavesOfType(
-      VIEW_TYPE_GRAPH_ANALYSIS
+      VIEW_TYPE_RELATED_NOTES
     )?.[0]?.view as AnalysisView
 
     if (view) return view
     else if (openIfNot) {
-      return await openView(this.app, VIEW_TYPE_GRAPH_ANALYSIS, AnalysisView)
+      return await openView(this.app, VIEW_TYPE_RELATED_NOTES, AnalysisView)
     } else return null
   }
 
@@ -308,7 +308,7 @@ export default class GraphAnalysisPlugin extends Plugin {
   }
 
   onunload() {
-    console.log('unloading graph analysis plugin')
+    console.log('unloading related notes plugin')
     
     // Clean up timeout
     if (this.updateTimeout) {
@@ -317,7 +317,7 @@ export default class GraphAnalysisPlugin extends Plugin {
     }
     
     this.app.workspace
-      .getLeavesOfType(VIEW_TYPE_GRAPH_ANALYSIS)
+      .getLeavesOfType(VIEW_TYPE_RELATED_NOTES)
       .forEach((leaf) => {
         leaf.view.unload()
         leaf.detach()
