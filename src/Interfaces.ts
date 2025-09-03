@@ -1,11 +1,5 @@
 import type { TFile } from 'obsidian'
-import { ReferenceCache } from 'obsidian'
 
-export interface ResolvedLinks {
-  [from: string]: {
-    [to: string]: number
-  }
-}
 
 export type SubtypeInfo = {
   subtype: Subtype
@@ -34,48 +28,13 @@ export interface ResultMap {
   [to: string]: { measure: number; extra: string[] }
 }
 
-export type HITSResult = {
-  converged: boolean
-  authorities: { [node: string]: number }
-  hubs: { [node: string]: number }
-}
 
-export interface ComponentResults {
-  measure: number
-  linked: boolean
-  to: string
-  resolved: boolean
-  extra: any
-  img: Promise<ArrayBuffer>
-}
 
-export interface CoCitation {
-  sentence: string[]
-  measure: number
-  source: string
-  line: number
-}
 
-export interface CoCitationRes {
-  measure: number
-  resolved: boolean
-  coCitations: CoCitation[]
-}
 
-export interface CoCitationMap {
-  [linkName: string]: CoCitationRes
-}
 
-export interface LineSentences {
-  line: number
-  linkSentence: number
-  linkSentenceStart: number
-  linkSentenceEnd: number
-  sentences: [string]
-  link: ReferenceCache
-}
 
-export type AnalysisAlg<T> = (a: string, options?: {}) => Promise<T>
+export type AnalysisAlg<T> = (a: string, options?: object) => Promise<T>
 
 export interface GraphAnalysisSettings {
   noInfinity: boolean

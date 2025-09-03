@@ -220,7 +220,6 @@
             if (!blockSwitch) {
               page++
               newBatch = sortedResults.slice(size * page, size * (page + 1) - 1)
-              console.log({ newBatch })
             }
           }}
         />

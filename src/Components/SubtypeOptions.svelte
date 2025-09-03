@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { App, TFile } from 'obsidian'
+  import type { App } from 'obsidian'
   import type AnalysisView from '../AnalysisView'
   import type { SubtypeInfo } from '../Interfaces'
   import type GraphAnalysisPlugin from '../main'

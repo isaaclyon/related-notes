@@ -1,34 +1,21 @@
 import Graph from 'graphology'
-import louvain from 'graphology-communities-louvain'
-import hits from 'graphology-metrics/centrality/hits'
 
 import {
   App,
-  CacheItem,
-  HeadingCache, ListItemCache,
-  Notice,
-  ReferenceCache,
   TagCache,
 } from 'obsidian'
-import { getAllTags, getLinkpath } from 'obsidian'
-import tokenizer from 'sbd'
 import {
-  clusteringCoefficient,
-  gatherCommunities,
   intersection,
 } from './GeneralGraphFn'
 import type {
   AnalysisAlg,
-  CoCitation,
-  CoCitationMap, CoCitationRes,
   Communities,
   GraphAnalysisSettings,
-  HITSResult, LineSentences,
   ResultMap,
   Subtype,
 } from './Interfaces'
-import { addPreCocitation, findSentence, getCounts, getMaxKey, roundNumber, sum } from './Utility'
-import { BM25Service, type ScoredResult, type BM25Options } from './index/BM25Service'
+import { roundNumber } from './Utility'
+import { BM25Service } from './index/BM25Service'
 import { LRUCache } from './LRUCache'
 
 export default class MyGraph extends Graph {
@@ -317,45 +304,8 @@ export default class MyGraph extends Graph {
 
 
 
-    Louvain: async (
-      a: string,
-      options: { resolution: number } = { resolution: 10 }
-    ): Promise<string[]> => {
-      const labelledNodes = louvain(this, options)
-      const labelOfA = labelledNodes[a]
-      const currComm: string[] = []
-      this.forEachNode((node) => {
-        if (labelledNodes[node] === labelOfA) {
-          currComm.push(node)
-        }
-      })
-      return currComm
-    },
 
 
-    BoW: async (a: string): Promise<ResultMap> => {
-      const results: ResultMap = {}
-      
-      // Use BM25 similarity instead of bag-of-words cosine similarity
-      const similarNotes = this.bm25Service.getSimilarNotes(a, 100)
-      
-      // Convert BM25 results to ResultMap format
-      for (const result of similarNotes) {
-        results[result.path] = {
-          measure: result.score,
-          extra: []
-        }
-      }
-      
-      // Add zero scores for nodes not returned by BM25
-      this.forEachNode((node: string) => {
-        if (!results[node]) {
-          results[node] = { measure: 0, extra: [] }
-        }
-      })
-      
-      return results
-    },
 
     // Tversky: async (a: string): Promise<ResultMap> => {
     //   const results: ResultMap = {}
@@ -423,17 +373,6 @@ export default class MyGraph extends Graph {
       return results
     },
 
-    Sentiment: async (a: string): Promise<ResultMap> => {
-      const results: ResultMap = {}
-      
-      // Sentiment analysis removed - returning empty results
-      // This was dependent on wink-nlp which has been removed
-      this.forEachNode((node) => {
-        results[node] = { measure: 0, extra: [] }
-      })
-      
-      return results
-    },
 
     'Link Suggestions': async (a: string): Promise<ResultMap> => {
       // Check cache first

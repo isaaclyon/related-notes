@@ -1,29 +1,19 @@
 import {
   App, CacheItem,
-  EditorRange, LinkCache,
+  EditorRange,
   MarkdownView,
   Menu,
-  Notice, ReferenceCache,
-  TFile,
+  Notice,
   WorkspaceLeaf,
 } from 'obsidian'
 import {
   copy,
   createNewMDNote,
-  isInVault,
-  isLinked,
-  ResolvedLinks,
 } from 'obsidian-community-lib'
-import type AnalysisView from './AnalysisView'
-import { DECIMALS, IMG_EXTENSIONS, LINKED, NOT_LINKED } from './Constants'
+import { DECIMALS, IMG_EXTENSIONS } from './Constants'
 import type {
-  ComponentResults,
-  GraphAnalysisSettings, LineSentences,
-  ResultMap,
-  Subtype,
+  GraphAnalysisSettings,
 } from './Interfaces'
-import type GraphAnalysisPlugin from './main'
-import { CoCitation } from './Interfaces'
 
 export const sum = (arr: number[]) => {
   if (arr.length === 0) {
@@ -137,9 +127,8 @@ export function openMenu(
       item
         .setTitle('Create Link: Current')
         .setIcon('documents')
-        .onClick((e) => {
+        .onClick(() => {
           try {
-            const currFile = app.workspace.getActiveFile()
             // @ts-expect-error - event.target is EventTarget, lacks innerText in typings
             const targetStr = tdEl.innerText
             // Note: createOrUpdateYaml was removed - this functionality is disabled
@@ -154,7 +143,7 @@ export function openMenu(
       item
         .setTitle('Create Link: Target')
         .setIcon('documents')
-        .onClick((e) => {
+        .onClick(() => {
           const currStr = app.workspace.getActiveFile().basename
 
           const { target } = event
@@ -246,25 +235,6 @@ export function jumpToSelection(app: App, line: number, sentence: string) {
     setTimeout(() => {
       marker.clear()
     }, 1000)
-  } else if (view && view.getMode() === 'preview') {
-    // Handle preview mode
   }
 }
 
-export function addPreCocitation(preCocitations: { [name: string]: [number, CoCitation[]] },
-                                 linkPath: string,
-                                 measure: number,
-                                 sentence: string[],
-                                 source: string,
-                                 line: number) {
-  preCocitations[linkPath][0] = Math.max(
-    preCocitations[linkPath][0],
-    measure
-  )
-  preCocitations[linkPath][1].push({
-    sentence,
-    measure,
-    source,
-    line,
-  })
-}

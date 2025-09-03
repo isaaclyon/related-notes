@@ -1,5 +1,4 @@
 <script lang="ts">
-  import AnalysisView from '../AnalysisView'
 
   import type GraphAnalysisPlugin from '../main'
 
