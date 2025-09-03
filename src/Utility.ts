@@ -140,7 +140,7 @@ export function openMenu(
         .onClick((e) => {
           try {
             const currFile = app.workspace.getActiveFile()
-            // @ts-ignore
+            // @ts-expect-error - event.target is EventTarget, lacks innerText in typings
             const targetStr = tdEl.innerText
             // Note: createOrUpdateYaml was removed - this functionality is disabled
             new Notice('YAML functionality disabled')
@@ -158,7 +158,7 @@ export function openMenu(
           const currStr = app.workspace.getActiveFile().basename
 
           const { target } = event
-          // @ts-ignore
+          // @ts-expect-error - EventTarget does not have innerText in typings
           const targetStr = target.innerText
           const targetFile = app.metadataCache.getFirstLinkpathDest(
             targetStr,
@@ -207,7 +207,7 @@ export async function openOrSwitch(
   if (leavesWithDestAlreadyOpen.length > 0) {
     workspace.setActiveLeaf(leavesWithDestAlreadyOpen[0])
   } else {
-    // @ts-ignore
+    // @ts-expect-error - vault.getConfig is not in type defs
     const mode = app.vault.getConfig('defaultViewMode') as string
     const leaf =
       event.ctrlKey || event.getModifierState('Meta')

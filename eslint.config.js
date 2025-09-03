@@ -69,7 +69,17 @@ export default [
     }
   },
   {
+    files: ['**/*.test.ts', 'src/__mocks__/**'],
+    rules: {
+      // In tests/mocks, allow flexible types to avoid intrusive refactors
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-empty-object-type': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off'
+    }
+  },
+  {
     ignores: [
+      '.code/**',
       'node_modules/**',
       'dist/**',
       'main.js',
