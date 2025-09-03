@@ -12,7 +12,8 @@
       "Bash(git log:*)",
       "Bash(npm install:*)",
       "Bash(npm test:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": [],
     "ask": []

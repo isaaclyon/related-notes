@@ -12,7 +12,10 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:unit": "jest --testPathPattern='unit|spec'",
-    "test:integration": "jest --testPathPattern='integration'"
+    "test:integration": "jest --testPathPattern='integration'",
+    "lint": "eslint . --ext .ts,.svelte --fix",
+    "lint:check": "eslint . --ext .ts,.svelte",
+    "typecheck": "tsc --noEmit"
   },
   "standard-version": {
     "t": ""
@@ -27,6 +30,10 @@
     "@testing-library/svelte": "^5.2.8",
     "@types/jest": "^30.0.0",
     "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.42.0",
+    "@typescript-eslint/parser": "^8.42.0",
+    "eslint": "^9.34.0",
+    "eslint-plugin-svelte": "^3.11.0",
     "jest": "^30.1.2",
     "jest-environment-jsdom": "^30.1.2",
     "jest-extended": "^6.0.0",
